@@ -59,6 +59,7 @@ def edit(rec_id=None):
         if not rec:
             flash(f'{table.display_name} record not found')
         else:
+            table.update(rec,request.form)
             if validForm(rec):
                 table.save(rec)
             return redirect(g.listURL)

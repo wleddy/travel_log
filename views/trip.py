@@ -47,7 +47,7 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
-
+    # import pdb;pdb.set_trace()
     if request.form:
         table = PRIMARY_TABLE(g.db)
         id = cleanRecordID(request.form.get('id',-1))
@@ -60,6 +60,7 @@ def edit(rec_id=None):
         if not rec:
             flash(f'{table.display_name} record not found')
         else:
+            table.update(rec,request.form)
             if validForm(rec):
                 table.save(rec)
             return redirect(g.listURL)
@@ -114,9 +115,9 @@ def create_menus():
         top_level=False,
         minimum_rank_required=500,
     )
-    g.admin.register(models.TripImage,
-        url_for('trip_image.display'),
-        display_name='Images',
+    g.admin.register(models.TripPhoto,
+        url_for('trip_photo.display'),
+        display_name='Photos',
         top_level=False,
         minimum_rank_required=500,
     )
