@@ -9,7 +9,7 @@ class TripSegment(SqliteTable):
     def __init__(self,db_connection):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
-        self.order_by_col = 'segment_date DESC'
+        self.order_by_col = 'segment_date'
         self.defaults = {}
         
     def create_table(self):
