@@ -6,20 +6,23 @@ from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
 
 import travel_log.models as models
-from travel_log.views import trip_photo
 
-PRIMARY_TABLE = models.Trip
-MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
+PRIMARY_TABLE = None
 
-mod = Blueprint(MOD_NAME,__name__, template_folder=f'{MOD_NAME}/templates/', url_prefix=f'/{MOD_NAME}')
+mod = Blueprint('travel_log',__name__, template_folder='templates/travel_log/', url_prefix='/travel_log')
 
 
 def setExits():
     g.listURL = url_for('.display')
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
-    g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
-    
+    # g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
+
+@mod.route('/',methods=['GET',])
+def home():
+    """ The Welcom page """
+    return render_template('home.html')
+
 
 # this handles table list and record delete
 @mod.route('/<path:path>',methods=['GET','POST',])
@@ -47,7 +50,7 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
-    # import pdb;pdb.set_trace()
+
     if request.form:
         table = PRIMARY_TABLE(g.db)
         id = cleanRecordID(request.form.get('id',-1))
@@ -95,33 +98,14 @@ def create_menus():
     # # single line menu
     # g.menu_items.append({'title':'Something','url':url_for('.something')})
     
-    # This makes a drop down menu for this application
-    g.admin.register(models.Trip,url_for('trip.display'),display_name='Trip Log',header_row=True,minimum_rank_required=500,roles=['admin',])
-    g.admin.register(models.Trip,
-        url_for('trip.display'),
-        display_name='Trips',
-        top_level=False,
-        minimum_rank_required=500,
-    )
-    g.admin.register(models.TripSegment,
-        url_for('trip_segment.display'),
-        display_name='Trips Segments',
-        top_level=False,
-        minimum_rank_required=500,
-    )
-    g.admin.register(models.Vehicle,
-        url_for('vehicle.display'),
-        display_name='Vehicles',
-        top_level=False,
-        minimum_rank_required=500,
-    )
-    g.admin.register(models.TripPhoto,
-        url_for('trip_photo.display'),
-        display_name='Photos',
-        top_level=False,
-        minimum_rank_required=500,
-    )
-
+    # # This makes a drop down menu for this application
+    # g.admin.register(models.TripSegment,url_for('trip_segment.display'),display_name='Trip Logging',header_row=True,minimum_rank_required=500,roles=['admin',])
+    # g.admin.register(models.TripSegment,
+    #     url_for('trip_segment.display'),
+    #     display_name='Trip Segments',
+    #     top_level=False,
+    #     minimum_rank_required=500,
+    # )
 
 def register_blueprints(app, subdomain = None) -> None:
     """
@@ -133,11 +117,7 @@ def register_blueprints(app, subdomain = None) -> None:
     Keyword Arguments:
         subdomain -- limit access to this subdomain if difined (default: {None})
     """ 
-    from travel_log.views import vehicle, trip_segment
     app.register_blueprint(mod, subdomain=subdomain)
-    app.register_blueprint(vehicle.mod, subdomain=subdomain)
-    app.register_blueprint(trip_segment.mod, subdomain=subdomain)
-    app.register_blueprint(trip_photo.mod, subdomain=subdomain)
 
 
 def initialize_tables(db) -> None:

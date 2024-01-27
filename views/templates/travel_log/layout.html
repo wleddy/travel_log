@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{% block document_title %}{% block title%}{{g.title}}{% endblock %} - {{ site_config.SITE_NAME | default("",True) }}{% endblock document_title%}</title> 
+	<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" >
+    <link rel="SHORTCUT ICON" type="image/vnd.microsoft.icon" href="{{ url_for('static', filename='favicon.ico') }}" >
+    <link rel="apple-touch-icon" type="image/png" sizes="57x57" href="{{ url_for('static', filename='apple-touch-icon-57.png') }}"><!-- iPhone -->
+    <link rel="apple-touch-icon" type="image/png" sizes="72x72" href="{{ url_for('static', filename='apple-touch-icon-72.png') }}"><!-- iPad -->
+    <link rel="apple-touch-icon" type="image/png" sizes="114x114" href="{{ url_for('static', filename='apple-touch-icon-114.png') }}"><!-- iPhone4 -->
+    <link rel="apple-touch-icon" type="image/png" sizes="120x120" href="{{ url_for('static', filename='apple-touch-icon-120.png') }}"><!-- iPhone7? -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='apple-touch-icon-114.png') }}"><!-- Opera Speed Dial, at least 144×114 px -->
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+	<script src="{{ url_for('static', filename='jquery.1.10.1.js') }}"></script>
+	<script src="{{ url_for('static', filename='common.js') }}"></script>
+	<script src="{{ url_for('static', filename='layout.js') }}"></script>
+    {% set as_bar = site_config.MENU_AS_BAR | default(False) %}
+    <script>
+        set_menu_type({{ as_bar | lower }});
+    </script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='w3.css' )}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='default_style.css' )}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css' )}}">
+    
+    {% block head%}{% endblock %}
+</head>
+<body>
+    <div id="contain" >    
+        <div id="sg-header">
+        {% block header %}
+            {% include "header.html"%}
+            {% include "top-nav.html"%}
+        {% endblock header %}
+        </div>
+        
+        <div id="sg-content" class="w3-main w3-container menu_space">
+            <div id="sg-page-header">
+            {% block page_header %}
+                {% if not g.suppress_page_header %}
+                {% include "page_header.html" %}
+                {% endif %}
+            {% endblock page_header %}
+            </div>
+            
+            <div id="sg-flasher">
+                {% block flasher %}{% include "flasher.html" %}{% endblock flasher%}
+            </div>
+            
+            <div id="sg-body">
+                {% block body %}{% endblock %}
+            </div>
+            
+        </div>
+
+    </div>
+
+    <div id="sg-footer">
+        {% block footer %}{% include 'footer.html'%}{% endblock footer%}
+    </div>
+
+    {% block dialog %}
+    <div id="dialog"></div>
+    <div id="modal-form-contain" class="w3-modal">
+        <div id="modal-form" class="w3-container w3-modal-content w3-card-4 w3-animate-top" style=""></div>
+    </div>
+    {% endblock dialog %}
+</body>
+</html>
