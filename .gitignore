@@ -1,0 +1,19 @@
+*.py[co]
+env/
+.idea
+*.log
+*.sqlite
+instance/
+__pycache__
+.pytest_cache
+.coverage
+robots.txt
+.vscode/
+
+## The User repo has it's own master
+users/
+shotglass2/
+
+## Passenger uses this
+tmp/
+passenger_wsgi.py
