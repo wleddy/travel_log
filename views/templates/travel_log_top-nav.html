@@ -1,0 +1,33 @@
+{% macro menu_item_classes() %}
+w3-bar-item w3-button w3-menu-border w3-menu-color w3-menu-hover-color
+{% endmacro %}
+<div id="nav" style="overflow:hidden;">
+    <button id="hamburger" class="w3-button w3-xlarge  w3-hide-large w3-primary-color w3-secondary-hover-color" style="position:absolute;top:3pt;right:6pt;" onclick="primary_nav_toggle();">&#9776;</button>
+    {% if as_bar and g.menu_items %}
+    <div id="nav-placeholder" class="w3-mobile w3-bar w3-collapse w3-primary-color w3-hide-medium w3-hide-small w3-border-top w3-border-bottom" style="position:absolute;z-index:-1;height:30pt">&nbsp;</div>
+    <!-- <div id="nav-placeholder_small" class="w3-mobile w3-bar w3-primary-color w3-hide-large" style="position:absolute;z-index:-1;">&nbsp;</div> -->
+    <!-- <div id="nav-placeholder_small_headspace" class="w3-mobile w3-bar w3-hide-large" >&nbsp;</div> -->
+    {% endif %}
+    <div id="primary-nav" class="w3-mobile w3-sidebar w3-bar-block w3-collapse w3-right w3-card w3-animate-right w3-secondary-color menu_width nav-sidebar-extra" >
+        <a href="javascript:void(0)" onclick="primary_nav_toggle();" 
+          class="w3-button w3-bar-item w3-hide-large w3-secondary-color">Close &times;</a>
+        {% if g.menu_items %}
+        {% for item in g.menu_items %}          
+          {% if 'drop_down_menu' in item %}
+            <div class="w3-dropdown-hover w3-bar-block">
+                <button class="w3-button w3-menu-border w3-drop-menu-section-color w3-drop-menu-section-hover-color"><strong>{{item['title']}}</strong></button>
+                <div class="w3-dropdown-content w3-card-4">
+          	{% for dd_item in item.drop_down_menu %}
+              <a class="w3-bar-item w3-button w3-menu-border w3-drop-menu-color w3-drop-menu-hover-color" href="{{ dd_item.url }}">{{ dd_item.title }}</a>
+          	{% endfor %}
+          		</div></div>
+          {% else %}
+          <a class="{{menu_item_classes()}} " href="{{ item.url }}">{{ item.title }}</a>
+          {% endif %} <!-- drop down menu? -->
+        {% endfor %}
+        {% endif %} <!-- g.menu -->
+    </div>
+</div>
+
+
+

@@ -1,5 +1,29 @@
-{% extends 'travel_log/layout.html' %}
+{% extends 'travel_log_layout.html' %}
+
+{% block head %}
+<style>
+    #login-section {
+        text-align: center;
+
+    }
+    p#login {
+        border:4pt solid skyblue;
+    }
+    p#login a{
+        padding: 3pt 20pt;
+    }
+    #new-account {
+        margin-top: 12pt;
+    }
+</style>
+
+{% endblock head %}
 
 {% block body %}
-<h2>This is home</h2>
+<div id="login-section">
+    <h2>Welcome to Travel Log!</h2>
+    <p id="login" class="w3-button w3-white w3-round-large w3-large"><a href="{{ url_for('travel_log.login') }}" >Sign in</a></p>
+    <p id="new-account"><a href="{{ url_for('travel_log.new_account') }}" >Create an Account</a></p>
+    
+</div>
 {% endblock body %}

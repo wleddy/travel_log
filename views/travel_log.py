@@ -4,71 +4,54 @@ from shotglass2.takeabeltof.utils import printException, cleanRecordID
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
-
+from shotglass2.users.views import login, user
 import travel_log.models as models
 
 PRIMARY_TABLE = None
 
-mod = Blueprint('travel_log',__name__, template_folder='templates/travel_log/', url_prefix='/travel_log')
+mod = Blueprint('travel_log',__name__, 
+                template_folder='templates/travel_log/', 
+                static_folder='static/travel_log/',
+                url_prefix='/travel_log',
+                )
 
 
 def setExits():
-    g.listURL = url_for('.display')
-    g.editURL = url_for('.edit')
-    g.deleteURL = url_for('.display') + 'delete/'
+    # g.listURL = url_for('.display')
+    # g.editURL = url_for('.edit')
+    # g.deleteURL = url_for('.display') + 'delete/'
     # g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
+    create_menus()
 
 @mod.route('/',methods=['GET',])
 def home():
     """ The Welcom page """
+    setExits()
     return render_template('home.html')
 
-
-# this handles table list and record delete
-@mod.route('/<path:path>',methods=['GET','POST',])
-@mod.route('/<path:path>/',methods=['GET','POST',])
-@mod.route('/',methods=['GET','POST',])
-@table_access_required(PRIMARY_TABLE)
-def display(path=None):
-    # import pdb;pdb.set_trace()
+@mod.route('logout/',methods=['GET',])
+def logout():
+    """ log a user out """
     setExits()
-    
-    view = TableView(PRIMARY_TABLE,g.db)
-    # optionally specify the list fields
-    # view.list_fields = [
-    #     ]
-    
-    return view.dispatch_request()
-    
+    return redirect(url_for('login.logout') + f'?next={url_for(".home")}')
 
-## Edit the PRIMARY_TABLE
-@mod.route('/edit', methods=['POST', 'GET'])
-@mod.route('/edit/', methods=['POST', 'GET'])
-@mod.route('/edit/<int:rec_id>/', methods=['POST','GET'])
-@table_access_required(PRIMARY_TABLE)
-def edit(rec_id=None):
+@mod.route('login/',methods=['GET',])
+def login():
+    """ log a user out """
     setExits()
-    g.title = "Edit {} Record".format(g.title)
-    view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    if user in session:
+        return redirect(url_for('.home'))
+    
+    return redirect(url_for('login.login') + f'?next={url_for(".home")}')
 
-    if request.form:
-        table = PRIMARY_TABLE(g.db)
-        id = cleanRecordID(request.form.get('id',-1))
-        if id < 0:
-            return redirect(g.listURL)
-        if id == 0:
-            rec = table.new()
-        else:
-            rec = table.get(id)
-        if not rec:
-            flash(f'{table.display_name} record not found')
-        else:
-            table.update(rec,request.form)
-            if validForm(rec):
-                table.save(rec)
-            return redirect(g.listURL)
-
-    return view.render()
+@mod.route('new_account/',methods=['GET',])
+def new_account():
+    """ log a user out """
+    setExits()
+    if user in session:
+        return redirect(url_for('.home'))
+    
+    return redirect(url_for('user.register') + f'?next={url_for(".home")}')
 
     
 def validForm(rec):
@@ -77,7 +60,7 @@ def validForm(rec):
                 
     return goodForm
 
-    
+
 def create_menus():
     """
     Create menu items for this module
@@ -88,6 +71,7 @@ def create_menus():
     Menu elements defined using g.admin.register can have access control.
 
     """
+    g.menu_items = []
 
     # # Static dropdown menu...
     # g.menu_items.append({'title':'Drop down header','drop_down_menu':{
@@ -95,8 +79,16 @@ def create_menus():
     #         'name':'Second','url':url_for('.another'),
     #         }
     #     })
-    # # single line menu
-    # g.menu_items.append({'title':'Something','url':url_for('.something')})
+    # single line menu
+
+    g.menu_items.append({'title':'Home','url':url_for('.home')})
+    if 'user' in session:
+        # g.menu_items.append({'title':'Trips','url':url_for('.trips')})
+        # g.menu_items.append({'title':'Cars','url':url_for('.cars')})
+        # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
+        # g.menu_items.append({'title':'Account','url':url_for('.user_edit')})
+        g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
+
     
     # # This makes a drop down menu for this application
     # g.admin.register(models.TripSegment,url_for('trip_segment.display'),display_name='Trip Logging',header_row=True,minimum_rank_required=500,roles=['admin',])

@@ -1,15 +1,15 @@
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
         
-class TripSegment(SqliteTable):
+class LogEntry(SqliteTable):
     """Handle some basic interactions this table"""
 
-    TABLE_IDENTITY = 'trip_segment' # so we can get the table name before the app starts up
+    TABLE_IDENTITY = 'log_entry' # so we can get the table name before the app starts up
 
     def __init__(self,db_connection):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
-        self.order_by_col = 'segment_date'
+        self.order_by_col = 'entry_date'
         self.defaults = {}
         
     def create_table(self):
@@ -17,14 +17,15 @@ class TripSegment(SqliteTable):
         
         sql = """
             'location_name' TEXT,
-            'segment_type' TEXT,
-            'segment_date' DATETIME,
+            'entry_type' TEXT,
+            'entry_date' DATETIME,
             'memo' TEXT,
             'longitude' REAL,
             'latitude' REAL,
             'odometer' INT,
             'projected_range' INT,
             'fuel_qty' REAL,
+            'charging_rate' INT,
             'fuel_cost' REAL,
             'trip_id' INT,
             FOREIGN KEY (trip_id) REFERENCES trip(id) ON DELETE CASCADE
