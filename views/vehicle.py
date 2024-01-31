@@ -4,6 +4,7 @@ from shotglass2.takeabeltof.utils import printException, cleanRecordID
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
+from shotglass2.users.models import User
 
 import travel_log.models as models
 
@@ -46,6 +47,17 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    view.edit_fields = [
+        {'name':'name','req':True},
+        {'name':'fuel_type','type':'select', 'options': [ {'name':'Electric'}, {'name':'Gas'},]},
+        {'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh or Gal.'},
+    ]
+    user_options = []
+    users = User(g.db).select()
+    for user in users:
+        user_options.append({'name':f'{user.full_name}','value':user.id})
+    view.edit_fields.append({'name':'user_id','type':'select','label':'User','options':user_options,})
+
 
     if request.form:
         table = PRIMARY_TABLE(g.db)

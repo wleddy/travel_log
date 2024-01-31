@@ -2,6 +2,10 @@
 
 {% block head %}
 <style>
+    h2 {
+        text-align: center;
+    }
+
     #login-section {
         text-align: center;
 
@@ -20,10 +24,16 @@
 {% endblock head %}
 
 {% block body %}
+{% if not 'user' in session %}
 <div id="login-section">
     <h2>Welcome to Travel Log!</h2>
     <p id="login" class="w3-button w3-white w3-round-large w3-large"><a href="{{ url_for('travel_log.login') }}" >Sign in</a></p>
     <p id="new-account"><a href="{{ url_for('travel_log.new_account') }}" >Create an Account</a></p>
     
 </div>
+{% else %}
+    <div id="trip_list">
+        <h2>Trips</h2>
+    </div>
+{% endif %}
 {% endblock body %}

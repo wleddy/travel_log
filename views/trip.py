@@ -4,9 +4,10 @@ from shotglass2.takeabeltof.utils import printException, cleanRecordID
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
+from shotglass2.users.models import User
 
 import travel_log.models as models
-from travel_log.views import log_entry, trip_photo
+from travel_log.views import log_entry, trip_photo, vehicle
 
 PRIMARY_TABLE = models.Trip
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
@@ -47,6 +48,18 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    view.edit_fields = [
+        {'name':'name','req':True},
+        ]
+    options = []
+    user = User(g.db).get(session.get('user'))
+    if user:
+        cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
+    if cars:
+        for car in cars:
+            options.append({'name':f'{car.name}','value':car.id})
+        view.edit_fields.append({'name':'vehicle_id','type':'select','label':'Vehicles','options':options,})
+
     # import pdb;pdb.set_trace()
     if request.form:
         table = PRIMARY_TABLE(g.db)
@@ -125,7 +138,7 @@ def create_menus():
 
 def register_blueprints(app, subdomain = None) -> None:
     """
-    Register this module with the app for this module
+    Register one or more modules with the app
 
     Arguments:
         app -- the current app
@@ -133,11 +146,13 @@ def register_blueprints(app, subdomain = None) -> None:
     Keyword Arguments:
         subdomain -- limit access to this subdomain if difined (default: {None})
     """ 
-    from travel_log.views import vehicle
+    
+    from travel_log.views import vehicle, log_entry, trip_photo, travel_log
     app.register_blueprint(mod, subdomain=subdomain)
     app.register_blueprint(vehicle.mod, subdomain=subdomain)
     app.register_blueprint(log_entry.mod, subdomain=subdomain)
     app.register_blueprint(trip_photo.mod, subdomain=subdomain)
+    app.register_blueprint(travel_log.mod, subdomain=subdomain)
 
 
 def initialize_tables(db) -> None:

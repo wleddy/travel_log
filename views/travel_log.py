@@ -53,6 +53,16 @@ def new_account():
     
     return redirect(url_for('user.register') + f'?next={url_for(".home")}')
 
+@mod.route('trips/',methods=['GET',])
+def trip_list():
+    """ display the list of trips """
+    setExits()
+    if not user in session:
+        return redirect(url_for('.login'))
+    data = {}
+
+    return render_template('home.html',data=data)
+
     
 def validForm(rec):
     # Validate the form
@@ -83,7 +93,7 @@ def create_menus():
 
     g.menu_items.append({'title':'Home','url':url_for('.home')})
     if 'user' in session:
-        # g.menu_items.append({'title':'Trips','url':url_for('.trips')})
+        g.menu_items.append({'title':'Trips','url':url_for('.trip_list')})
         # g.menu_items.append({'title':'Cars','url':url_for('.cars')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         # g.menu_items.append({'title':'Account','url':url_for('.user_edit')})
@@ -98,7 +108,8 @@ def create_menus():
     #     top_level=False,
     #     minimum_rank_required=500,
     # )
-
+        
+        
 def register_blueprints(app, subdomain = None) -> None:
     """
     Register this module with the app for this module
