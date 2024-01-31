@@ -103,9 +103,9 @@ def edit(rec_id=None):
     view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','id':'entry_date_label'})
     entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
     if is_mobile_device():
-        field_type = 'datetime-local'
+        field_type = 'datetime-local' #Safari like this. I like it for mobile
     else:
-        field_type = 'datetime'
+        field_type = 'datetime' # I like this one better for Desktop
 
     content = f"""
     <div class="w3-row" >
