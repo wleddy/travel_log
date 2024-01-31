@@ -57,6 +57,7 @@ def edit(rec_id=None):
         return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
+        rec.entry_date = local_datetime_now()
     else:
         rec = table.get(rec_id)
         if request.form:
