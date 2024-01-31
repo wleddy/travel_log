@@ -60,26 +60,14 @@ def edit(rec_id=None):
 
 
     if request.form:
-        table = PRIMARY_TABLE(g.db)
-        id = cleanRecordID(request.form.get('id',-1))
-        if id < 0:
-            return redirect(g.listURL)
-        if id == 0:
-            rec = table.new()
-        else:
-            rec = table.get(id)
-        if not rec:
-            flash(f'{table.display_name} record not found')
-        else:
-            table.update(rec,request.form)
-            if validForm(rec):
-                table.save(rec)
+        view.update(save_after_update=True)
+        if view.success:
             return redirect(g.listURL)
 
     return view.render()
 
     
-def validForm(rec):
+def validate_form (view):
     # Validate the form
     goodForm = True
                 

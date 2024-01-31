@@ -62,26 +62,14 @@ def edit(rec_id=None):
 
     # import pdb;pdb.set_trace()
     if request.form:
-        table = PRIMARY_TABLE(g.db)
-        id = cleanRecordID(request.form.get('id',-1))
-        if id < 0:
-            return redirect(g.listURL)
-        if id == 0:
-            rec = table.new()
-        else:
-            rec = table.get(id)
-        if not rec:
-            flash(f'{table.display_name} record not found')
-        else:
-            table.update(rec,request.form)
-            if validForm(rec):
-                table.save(rec)
+        view.update(save_after_update=True)
+        if view.success:
             return redirect(g.listURL)
 
     return view.render()
 
     
-def validForm(rec):
+def validate_form(view):
     # Validate the form
     goodForm = True
                 
@@ -146,7 +134,7 @@ def register_blueprints(app, subdomain = None) -> None:
     Keyword Arguments:
         subdomain -- limit access to this subdomain if difined (default: {None})
     """ 
-    
+
     from travel_log.views import vehicle, log_entry, trip_photo, travel_log
     app.register_blueprint(mod, subdomain=subdomain)
     app.register_blueprint(vehicle.mod, subdomain=subdomain)
