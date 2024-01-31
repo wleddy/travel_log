@@ -48,12 +48,22 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
 
-
+    # Need to pre-fetch the log record so I can populate the form
+    rec_id = cleanRecordID(request.form.get('id',rec_id))
+    rec = None
+    table =  PRIMARY_TABLE(g.db)
+    if rec_id < 0:
+        flash("Invalid Request")
+        return redirect(g.listURL)
+    if rec_id == 0:
+        rec = table.new()
+    else:
+        rec = table.get(rec_id)
+        if request.form:
+            table.update(rec,request.form)
  
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
 
-    if is_mobile_device():
-        view.use_anytime_date_picker = False
 
     view.edit_fields = []
     options = []
@@ -86,11 +96,16 @@ def edit(rec_id=None):
     )
     entry_date_dict = {'name':'entry_date','req':True,'type':'datetime-local','label':'When'}
     if is_mobile_device() or False:
+        view.use_anytime_date_picker = False
         view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','req':True})
+
         entry_date_dict.update({'type':'raw','content':''})
         entry_date_dict['content'] = f"""
         <p>
-            <input type="datetime-local" name="entry_date" value="{rec.entry_date}" required />
+            <input type="hidden" name="entry_date" value="{rec.entry_date}" />
+            <input type="text" name="date_filed" id="date_field" value="{date_to_string(rec.entry_date,'date')}" />
+            <input type="text" name="entry_date" value="{date_to_string(rec.entry_date,'time')}" />
+            <input type="button" name="Now" value="Now" />
         </p>
         """
 
