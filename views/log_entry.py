@@ -57,11 +57,13 @@ def edit(rec_id=None):
         return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
-        rec.entry_date = local_datetime_now()
+        # rec.entry_date = local_datetime_now()
     else:
         rec = table.get(rec_id)
         if request.form:
             table.update(rec,request.form)
+        if not rec.entry_date:
+            rec.entry_date = local_datetime_now()
  
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
 
@@ -94,21 +96,27 @@ def edit(rec_id=None):
             {'name':'Arrival'},
         ]},
         ]
-    )
-    entry_date_dict = {'name':'entry_date','req':True,'type':'datetime-local','label':'When'}
-    if is_mobile_device() and False:
+    )    
+    if is_mobile_device():
         view.use_anytime_date_picker = False
-        view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','req':True})
 
-        entry_date_dict.update({'type':'raw','content':''})
-        entry_date_dict['content'] = f"""
-        <p>
-            <input type="hidden" name="entry_date" value="{rec.entry_date}" />
-            <input type="text" name="date_filed" id="date_field" value="{date_to_string(rec.entry_date,'date')}" />
-            <input type="text" name="entry_date" value="{date_to_string(rec.entry_date,'time')}" />
-            <input type="button" name="Now" value="Now" />
-        </p>
-        """
+    view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','id':'entry_date_label'})
+    entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
+    if is_mobile_device():
+        field_type = 'datetime-local'
+    else:
+        field_type = 'datetime'
+
+    content = f"""
+    <div class="w3-row" >
+    <p>
+        <input name="entry_date" class="w3-input w3-col l10 m10 s10" type="{field_type}" id="entry_date" value="{date_to_string(rec.entry_date,'iso_datetime')}" />
+        <input class="w3-col l2 m2 s2 w3_button w3-round-large w3-primary-color" type="button" name="Now" value="Now" />
+    </p>
+    </div>
+    """
+    
+    entry_date_dict['content'] = content
 
     view.edit_fields.extend([entry_date_dict])
 
@@ -124,6 +132,8 @@ def edit(rec_id=None):
         {'name':'fuel_cost','type':'number'},
         ]
     )
+    
+    
 
     # Some methods in view you can override
     view.validate_form = validate_form # view does almost no validation
