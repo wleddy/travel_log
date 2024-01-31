@@ -96,7 +96,7 @@ def edit(rec_id=None):
         ]
     )
     entry_date_dict = {'name':'entry_date','req':True,'type':'datetime-local','label':'When'}
-    if is_mobile_device() or False:
+    if is_mobile_device() and False:
         view.use_anytime_date_picker = False
         view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','req':True})
 
