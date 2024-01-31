@@ -1,5 +1,6 @@
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
+from shotglass2.takeabeltof.date_utils import local_datetime_now
         
 class LogEntry(SqliteTable):
     """Handle some basic interactions this table"""
@@ -10,7 +11,7 @@ class LogEntry(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'entry_date'
-        self.defaults = {}
+        self.defaults = {'entry_date':str(local_datetime_now()),}
         
     def create_table(self):
         """Define and create a table"""
