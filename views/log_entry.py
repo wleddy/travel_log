@@ -33,8 +33,13 @@ def display(path=None):
     
     view = TableView(PRIMARY_TABLE,g.db)
     # optionally specify the list fields
-    # view.list_fields = [
-    #     ]
+    view.list_fields = [
+        {'name':'id',},
+        {'name':'location_name',},
+        {'nmame':'entry_type',},
+        {'name':'entry_date','type':'datetime','search':'datetime',},
+        {'name':'memo'},
+        ]
     
     return view.dispatch_request()
     
@@ -108,12 +113,9 @@ def edit(rec_id=None):
         field_type = 'datetime' # I like this one better for Desktop
 
     content = f"""
-    <div class="w3-row" >
     <p>
-        <input name="entry_date" class="w3-input w3-col l10 m10 s10" type="{field_type}" id="entry_date" value="{date_to_string(rec.entry_date,'iso_datetime')}" />
-        <input class="w3-col l2 m2 s2 w3_button w3-round-large w3-primary-color" type="button" name="Now" value="Now" />
+        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(rec.entry_date,'iso_datetime')}" />
     </p>
-    </div>
     """
     
     entry_date_dict['content'] = content
