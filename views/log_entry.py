@@ -123,13 +123,13 @@ def edit(rec_id=None):
     view.edit_fields.extend(
         [
         {'name':'memo','type':'textarea',},
-        {'name':'longitude','type':'number'},
-        {'name':'latitude','type':'number'},
+        {'name':'longitude','type':'text'},
+        {'name':'latitude','type':'text'},
         {'name':'odometer','type':'number'},
         {'name':'projected_range','type':'number'},
-        {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','placeholder':'00%'},
+        {'name':'fuel_qty','type':'text','label':'Fuel Quantity as % of Full','placeholder':'00%'},
         {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)'},
-        {'name':'fuel_cost','type':'number'},
+        {'name':'fuel_cost','type':'text'},
         ]
     )
     
