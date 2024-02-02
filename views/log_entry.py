@@ -5,7 +5,6 @@ from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.date_utils import date_to_string, local_datetime_now
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
-from shotglass2.users.models import User
 
 import travel_log.models as models
 
@@ -72,70 +71,13 @@ def edit(rec_id=None):
  
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
 
-
-    view.edit_fields = []
-    options = []
-    user = User(g.db).get(session.get('user'))
-    if user:
-        cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
-    if cars:
-        trips = models.Trip(g.db).select(where=f"vehicle_id in ({','.join([str(car.id) for car in cars ] )})")
-        if trips:
-            for trip in trips:
-                options.append({'name':f'{trip.name}','value':trip.id})
-            view.edit_fields.append({'name':'trip_id','type':'select','label':'Trip','req':True,'options':options,})
-        else:
-            flash('You must have at least one Trip',category="warning")
-            return redirect(g.listURL)
-    else:
-        flash('You must have at least one Vehicle',category="warning")
-        return redirect(g.listURL)
-
-    
-    view.edit_fields.extend(
-        [
-        {'name':'location_name','req':True,},
-        {'name':'entry_type','req':True,'type':'select','options':[
-            {'name':'Departure'},
-            {'name':'Point of Interest'},
-            {'name':'Arrival'},
-        ]},
-        ]
-    )    
     if is_mobile_device():
         view.use_anytime_date_picker = False
 
-    view.edit_fields.append({'name':'entry_date','type':'label_only','label':'When','id':'entry_date_label'})
-    entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
-    if is_mobile_device():
-        field_type = 'datetime-local' #Safari like this. I like it for mobile
-    else:
-        field_type = 'datetime' # I like this one better for Desktop
+    view.edit_fields = get_edit_field_list(rec)
+    if view.edit_fields is None:
+        return redirect(g.listURL)
 
-    content = f"""
-    <p>
-        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(rec.entry_date,'iso_datetime')}" />
-    </p>
-    """
-    
-    entry_date_dict['content'] = content
-
-    view.edit_fields.extend([entry_date_dict])
-
-    view.edit_fields.extend(
-        [
-        {'name':'memo','type':'textarea',},
-        {'name':'longitude','type':'text'},
-        {'name':'latitude','type':'text'},
-        {'name':'odometer','type':'number'},
-        {'name':'projected_range','type':'number'},
-        {'name':'fuel_qty','type':'text','label':'Fuel Quantity as % of Full','placeholder':'00%'},
-        {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)'},
-        {'name':'fuel_cost','type':'text'},
-        ]
-    )
-    
-    
 
     # Some methods in view you can override
     view.validate_form = validate_form # view does almost no validation
@@ -143,7 +85,7 @@ def edit(rec_id=None):
     # view.before_commit_hook = ? # view is about to commit the record
 
     # Process the form?
-    if request.form:
+    if request.form and view.success:
         view.update(save_after_update=True)
         if view.success:
             return redirect(g.listURL)
@@ -154,7 +96,6 @@ def edit(rec_id=None):
     
 def validate_form(view):
     # Validate the form
-    valid_form = True
     view._set_edit_fields()
     for field in view.edit_fields:
         if field['name'] in request.form and field['req']:
@@ -165,9 +106,28 @@ def validate_form(view):
                 view.result_text = "You must enter a value for {}".format(field['name'])
                 flash(view.result_text)
                 view.success = False
-                valid_form = False
+
+    if view.rec.charging_rate and cleanRecordID(view.rec.charging_rate) < 0:
+        flash('The Charging Rate must be a positive number.')
+        view.success = False
+
+    try:
+        view.rec.fuel_cost = float(view.rec.fuel_cost)
+    except:
+        flash('The Fuel Cost must be a positive number.')
+        view.success = False
+
+    if isinstance(view.rec.fuel_qty,str):
+        view.rec.fuel_qty = view.rec.fuel_qty.strip()
+        if view.rec.fuel_qty.strip().endswith('%'):
+            view.rec.fuel_qty = view.rec.fuel_qty[0:-1]
+    try:
+        view.rec.fuel_qty = float(view.rec.fuel_qty)
+    except:
+        flash('The Fuel Quantity must be a positive number.')
+        view.success = False
             
-    return valid_form
+    return view.success # This is really redundant now...
 
 
     
@@ -195,7 +155,7 @@ def create_menus():
     g.admin.register(models.TripSegment,url_for('trip_segment.display'),display_name='Trip Logging',header_row=True,minimum_rank_required=500,roles=['admin',])
     g.admin.register(models.TripSegment,
         url_for('trip_segment.display'),
-        display_name='Trip Segments',
+        display_name='Log Entries',
         top_level=False,
         minimum_rank_required=500,
     )
@@ -223,3 +183,84 @@ def initialize_tables(db) -> None:
     """
     
     models.init_db(db)
+
+
+def get_edit_field_list(log_entry_rec) -> list | None:
+    """
+    Returns a list of edit field dicts for use with ViewEdit
+
+    Arguments:
+        log_entry_rec -- The log_entry record we are about to edit
+    Returns:
+        list or None on error
+    """ 
+    from shotglass2.users.models import User
+    from travel_log import models
+
+    edit_fields = []
+    options = []
+    user = User(g.db).get(session.get('user'))
+    prev_odometer = 0
+    if log_entry_rec.trip_id:
+        prev_odometer = models.LogEntry(g.db).select_one(where = f'trip_id = {log_entry_rec.trip_id}', order_by = 'odometer DESC')
+    if not prev_odometer:
+        prev_odometer = 0
+
+    if user:
+        cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
+    if cars:
+        trips = models.Trip(g.db).select(where=f"vehicle_id in ({','.join([str(car.id) for car in cars ] )})")
+        if trips:
+            for trip in trips:
+                options.append({'name':f'{trip.name}','value':trip.id})
+            edit_fields.append({'name':'trip_id','type':'select','label':'Trip','req':True,'options':options,})
+        else:
+            flash('You must have at least one Trip',category="warning")
+            return None
+    else:
+        flash('You must have at least one Vehicle',category="warning")
+        return None
+
+    
+    edit_fields.extend(
+        [
+        {'name':'location_name','req':True,},
+        {'name':'entry_type','req':True,'type':'select','options':[
+            {'name':'Departure'},
+            {'name':'Point of Interest'},
+            {'name':'Arrival'},
+        ]},
+        ]
+    )    
+ 
+    edit_fields.append({'name':'entry_date','type':'label_only','label':'When','id':'entry_date_label'})
+    entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
+    if is_mobile_device():
+        field_type = 'datetime-local' #Safari like this. I like it for mobile
+    else:
+        field_type = 'datetime' # I like this one better for Desktop
+
+    content = f"""
+    <p>
+        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')}" />
+    </p>
+    """
+    
+    entry_date_dict['content'] = content
+
+    edit_fields.extend([entry_date_dict])
+
+    edit_fields.extend(
+        [
+        {'name':'memo','type':'textarea',},
+        {'name':'longitude','type':'text'},
+        {'name':'latitude','type':'text'},
+        {'name':'odometer','type':'number','default':prev_odometer},
+        {'name':'projected_range','type':'number','default':0},
+        {'name':'fuel_qty','type':'text','label':'Fuel Quantity as % of Full','default':0},
+        {'name':'charging_rate','type':'text','label':'Max Charging Rate (Electric Only)'},
+        {'name':'fuel_cost','type':'text','default':'0.00'},
+        ]
+    )
+    
+    return edit_fields
