@@ -27,7 +27,22 @@ def setExits():
 def home():
     """ The Welcom page """
     setExits()
-    return render_template('home.html')
+    data = {}
+    # import pdb;pdb.set_trace()
+    if'user_id' in session:
+        # Get the trip data
+        sql = f"""
+        select log_entry.id, log_entry.location_name,log_entry.entry_type,
+        log_entry.entry_date, trip.name as trip_name 
+        from log_entry
+        join trip on trip.id = log_entry.trip_id
+        join vehicle on vehicle.id = trip.vehicle_id
+        where vehicle.user_id = {session.get('user_id')}
+        order by log_entry.entry_date DESC
+        """
+        data['recs'] = models.LogEntry(g.db).query(sql)
+
+    return render_template('home.html',data=data)
 
 @mod.route('logout/',methods=['GET',])
 def logout():
@@ -39,7 +54,7 @@ def logout():
 def login():
     """ log a user out """
     setExits()
-    if user in session:
+    if 'user' in session:
         return redirect(url_for('.home'))
     
     return redirect(url_for('login.login') + f'?next={url_for(".home")}')
@@ -48,23 +63,43 @@ def login():
 def new_account():
     """ log a user out """
     setExits()
-    if user in session:
+    if 'user' in session:
         return redirect(url_for('.home'))
     
     return redirect(url_for('user.register') + f'?next={url_for(".home")}')
 
-@mod.route('trips/',methods=['GET',])
-def trip_list():
+@mod.route('edit_trip/',methods=['GET',])
+@mod.route('edit_trip/<int:rec_id>',methods=['GET',])
+@login_required
+def edit_trip(rec_id=None):
     """ display the list of trips """
     setExits()
-    if not user in session:
-        return redirect(url_for('.login'))
     data = {}
 
     return render_template('home.html',data=data)
 
+
+@mod.route('cars/',methods=['GET',])
+@login_required
+def cars():
+    return request.path
+
+
+@mod.route('photos/',methods=['GET',])
+@login_required
+def photos():
+    return request.path
+
+
+@mod.route('account/',methods=['GET',])
+@login_required
+def account():
+    return request.path
+
+
+
     
-def validForm(rec):
+def validate_form(view):
     # Validate the form
     goodForm = True
                 
@@ -93,10 +128,9 @@ def create_menus():
 
     g.menu_items.append({'title':'Home','url':url_for('.home')})
     if 'user' in session:
-        g.menu_items.append({'title':'Trips','url':url_for('.trip_list')})
-        # g.menu_items.append({'title':'Cars','url':url_for('.cars')})
+        g.menu_items.append({'title':'Cars','url':url_for('.cars')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
-        # g.menu_items.append({'title':'Account','url':url_for('.user_edit')})
+        g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
 
     

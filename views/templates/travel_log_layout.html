@@ -12,7 +12,7 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-	<script src="{{ url_for('static', filename='jquery.1.10.1.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 	<script src="{{ url_for('static', filename='common.js') }}"></script>
 	<script src="{{ url_for('static', filename='layout.js') }}"></script>
     {% set as_bar = site_config.MENU_AS_BAR | default(False) %}
@@ -23,7 +23,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='w3.css' )}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='default_style.css' )}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css' )}}">
-    
+    <!-- Header Logos -->
+    <style>
+        #small_header_home img, #header_home img {
+             max-height:80pt;
+             object-fit: scale-down;
+         }
+         #small_header_home img {
+             text-align:center;
+         }
+     </style>
+
     {% block head%}{% endblock %}
 </head>
 <body>

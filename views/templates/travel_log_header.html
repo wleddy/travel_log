@@ -3,28 +3,17 @@
         <a id="header_home" href="{{ url_for('travel_log.home') }}">
               <img 
               id="headerlogo" src="{{ url_for('static', filename='images/header-logo.png') }}" 
-              alt="Header image for Travel Log" />
+              alt="Header image for Travel Log" >
         </a>
     </div>
     <div class="w3-hide-medium w3-hide-large" style="max-width:120pt;">
         <a id="small_header_home" href="{{ url_for('travel_log.home') }}">
               <img 
-              id="headerlogo" src="{{ url_for('static', filename='images/header-logo.png') }}" 
-              alt="Header image for Travel Log" />
+              id="headerlogo-small" src="{{ url_for('static', filename='images/header-logo.png') }}" 
+              alt="Header image for Travel Log" >
         </a>
     </div>
 
 </div>
- 
-<style>
-   #small_header_home img, #header_home img {
-        /* width:100%;
-        max-width:120pt; */
-        max-height:80pt;
-        object-fit: scale-down;
-    }
-    #small_header_home img {
-        text-align:center;
-    }
-</style>
+
 

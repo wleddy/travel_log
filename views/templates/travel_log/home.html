@@ -1,6 +1,7 @@
 {% extends 'travel_log_layout.html' %}
 
 {% block head %}
+{{ super() }}
 <style>
     h2 {
         text-align: center;
@@ -19,21 +20,111 @@
     #new-account {
         margin-top: 12pt;
     }
+    #log-body-contain {
+        width:70%;
+        max-width:250pt;
+        margin:20pt auto 10pt auto;
+    }
+    #trip-list-contain {
+        border:black solid 2pt;
+        width:90%;
+        margin: auto;
+        height: 400px;
+        scroll-behavior: auto;
+    }
+    table#home-trip-list, table#home-trip-list td.trip-row{
+        border-bottom: #666;
+        border-bottom-width: 1pt;
+        border-bottom-style: solid;
+        border-collapse: collapse;
+        padding:3pt;
+    }
+    table#home-trip-list td.trip-row p {
+        cursor: pointer;
+    }
+
+    table#home-trip-list {
+        margin:auto;
+    }
+    
+    .home-trip-head {
+        font-weight: bold;
+    }
+    #log-entry, #log-entry > div, #number-pad {
+        display: none;
+    } 
 </style>
 
+<script>
+    function show_log_entry(which) {
+        alert('show log')
+        $("#log-entry").show();
+        $('#log-entry-'+which.toString()).show();
+        $('#trip-list-contain').hide();
+    }
+    function show_home() {
+        $('div#log-entry').hide(300)
+        $('div#number-pad').hide(300) 
+        $('div#trip-list-contain').show(300);
+    }
+    
+    $(show_home);
+    
+</script>
 {% endblock head %}
 
+
 {% block body %}
+<div id="log-body-contain" class="w3-container ">
 {% if not 'user' in session %}
-<div id="login-section">
-    <h2>Welcome to Travel Log!</h2>
-    <p id="login" class="w3-button w3-white w3-round-large w3-large"><a href="{{ url_for('travel_log.login') }}" >Sign in</a></p>
-    <p id="new-account"><a href="{{ url_for('travel_log.new_account') }}" >Create an Account</a></p>
-    
-</div>
-{% else %}
-    <div id="trip_list">
-        <h2>Trips</h2>
+    <div id="login-section">
+        <h2>Welcome to Travel Log!</h2>
+        <p id="login" class="w3-button w3-white w3-round-large w3-large"><a href="{{ url_for('travel_log.login') }}" >Sign in</a></p>
+        <p id="new-account"><a href="{{ url_for('travel_log.new_account') }}" >Create an Account</a></p>
+        
     </div>
+{% else %}
+    <div id="trip-list-contain" >
+        <h2>Trips</h2>
+        {% if data.recs %}
+            <table id="home-trip-list">
+            {% set prev_trip = [''] %}
+            {% for rec in data.recs %}
+            {% if rec.trip_name != prev_trip[0] %}
+            {% set _ = prev_trip.pop() %}
+            {% set _ = prev_trip.append(rec.trip_name) %}
+                <tr>
+                    <td class="home-trip-head" colspan="4">{{ rec.trip_name }} {{ rec.entry_date | short_abbr_date_string }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td>&nbsp;</td>
+                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.location_name}}</p></td>
+                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.entry_type}}</p></td>
+                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.entry_date | local_time_string }}</p></td>
+                </tr>
+            {% endif %}
+            {% endfor %}
+            </table>
+        {% else %}
+        <p>Nothing to list</p>
+        {% endif %}
+    </div>
+    <div id="log-entry"  >
+        <h2>Edit Log</h2>
+        <div id="log-entry-2"  >
+            <p>This is a log entry 2...</p>
+            <input type="button" value="Done" onclick="show_home()" >
+        </div>
+        <div id="log-entry-3"  >
+            <p>This is a log entry 3...</p>
+            <input type="button" value="Done" onclick="show_home()" >
+        </div>
+    </div>
+    <div id="number-pad"   >
+        <p>Display a nice big number pad for entry</p>
+    </div>
+
 {% endif %}
+</div>
 {% endblock body %}
