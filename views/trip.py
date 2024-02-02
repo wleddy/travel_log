@@ -12,7 +12,7 @@ from travel_log.views import log_entry, trip_photo, vehicle
 PRIMARY_TABLE = models.Trip
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
 
-mod = Blueprint(MOD_NAME,__name__, template_folder=f'{MOD_NAME}/templates/', url_prefix=f'/{MOD_NAME}')
+mod = Blueprint(MOD_NAME,__name__, template_folder=f'templates/', url_prefix=f'/{MOD_NAME}')
 
 
 def setExits():

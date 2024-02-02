@@ -42,7 +42,7 @@ def home():
         """
         data['recs'] = models.LogEntry(g.db).query(sql)
 
-    return render_template('home.html',data=data)
+    return render_template('travel_log/home.html',data=data)
 
 @mod.route('logout/',methods=['GET',])
 def logout():
@@ -76,7 +76,7 @@ def edit_trip(rec_id=None):
     setExits()
     data = {}
 
-    return render_template('home.html',data=data)
+    return render_template('travel_log/home.html',data=data)
 
 
 @mod.route('cars/',methods=['GET',])

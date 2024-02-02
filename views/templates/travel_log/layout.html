@@ -40,14 +40,14 @@
     <div id="contain" >    
         <div id="sg-header">
         {% block header %}
-            {% include "travel_log_header.html"%}
-            {% include "travel_log_top-nav.html"%}
+            {% include "travel_log/header.html"%}
+            {% include "travel_log/top-nav.html"%}
         {% endblock header %}
         </div>
         
         <div id="sg-content" class="w3-main w3-container menu_space">            
             <div id="sg-flasher">
-                {% block flasher %}{% include "travel_log_flasher.html" %}{% endblock flasher%}
+                {% block flasher %}{% include "travel_log/flasher.html" %}{% endblock flasher%}
             </div>
             
             <div id="sg-body">
@@ -59,7 +59,7 @@
     </div>
 
     <div id="sg-footer">
-        {% block footer %}{% include "travel_log_footer.html" %}{% endblock footer%}
+        {% block footer %}{% include "travel_log/footer.html" %}{% endblock footer%}
     </div>
 
     {% block dialog %}
