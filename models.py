@@ -55,13 +55,14 @@ class Trip(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'lower(name)'
-        self.defaults = {}
+        self.defaults = {'creation_date':local_datetime_now()}
         
     def create_table(self):
         """Define and create a table"""
         
         sql = """
             'name' TEXT,
+            'creation_date' DATETIME NOT NULL,
             'vehicle_id' INT,
              FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON DELETE CASCADE
             """
