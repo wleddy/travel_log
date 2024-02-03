@@ -1,6 +1,6 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
-from shotglass2.takeabeltof.utils import printException, cleanRecordID
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
@@ -32,11 +32,9 @@ def display(path=None):
     setExits()
     
     view = TableView(PRIMARY_TABLE,g.db)
-    # optionally specify the list fields
-    # view.list_fields = [
-    #     ]
-    view.base_layout = 'travel_log/layout.html'
-    
+    view.list_fields = get_listing_field_list()
+    view.use_anytime_date_picker = not is_mobile_device()
+
     return view.dispatch_request()
     
 
@@ -88,6 +86,22 @@ def get_edit_field_list() -> list:
 
     return edit_fields
     
+def get_listing_field_list() -> list:
+    """
+    Return a list of fields to diaplay in list
+
+    Returns:
+        list of dicts
+    """
+
+    list_fields = [
+        {'name':'id',},
+        {'name':'name','label':'Trip Name',},
+        {'name':'creation_date','type':'datetime','search':'datetime'},
+        ]
+    
+    return list_fields
+
 
 def create_menus():
     """
