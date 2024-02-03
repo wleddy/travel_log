@@ -23,7 +23,7 @@ def setExits(which=''):
     g.deleteURL = url_for('.home')
     
     if which == 'log':
-        g.listURL = url_for('.home')
+        g.listURL = url_for('.log_list')
         g.editURL = url_for('.edit_log')
         g.deleteURL = g.listURL + 'delete/'
     elif which == 'trip':
@@ -35,7 +35,6 @@ def setExits(which=''):
         g.editURL = url_for('.edit_car')
         g.deleteURL = g.listURL + 'delete/'
         
-    # g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
     create_menus()
 
 
@@ -85,6 +84,28 @@ def new_account():
     
     return redirect(url_for('user.register') + f'?next={url_for(".home")}')
 
+@mod.route('log_list/<path:path>',methods=['GET','POST'])
+@mod.route('log_list/',methods=['GET','POST'])
+@login_required
+def log_list(path=None):
+    setExits('log')
+    
+    view = TableView(models.LogEntry,g.db)
+    # optionally specify the list fields
+    view.list_fields = [
+        {'name':'id',},
+        {'name':'location_name',},
+        {'nmame':'entry_type',},
+        {'name':'entry_date','type':'datetime','search':'datetime',},
+        {'name':'memo'},
+        ]
+    
+    view.base_layout = 'travel_log/layout.html'
+    view.use_anytime_date_picker = not is_mobile_device()
+
+    return view.dispatch_request()
+    
+
 @mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
 @mod.route('edit_log/<int:rec_id>/',methods=['GET','POST'])
 @mod.route('edit_log/',methods=['GET','POST'])
@@ -117,8 +138,8 @@ def edit_log(rec_id=None):
     view.validate_form = tl_views.log_entry.validate_form
     view.base_layout = "travel_log/form_layout.html"
 
-    if is_mobile_device:
-        view.use_anytime_date_picker = False
+    view.use_anytime_date_picker = not is_mobile_device()
+
 
     # Process the form?
     if request.form and view.success:
@@ -141,6 +162,7 @@ def trip_list(path=None):
     # view.list_fields = [
     #     ]
     view.base_layout = 'travel_log/layout.html'
+    view.use_anytime_date_picker = not is_mobile_device()
 
     return view.dispatch_request()
     
@@ -159,6 +181,7 @@ def edit_trip(rec_id=None):
     view.validate_form = tl_views.trip.validate_form
     view.base_layout = "travel_log/form_layout.html"
     view.edit_fields = tl_views.trip.get_edit_field_list()
+    view.use_anytime_date_picker = not is_mobile_device()
 
     # Process the form?
     if request.form and view.success:
@@ -267,6 +290,7 @@ def create_menus():
     if 'user' in session:
         g.menu_items.append({'title':'Cars','url':url_for('.car_list')})
         g.menu_items.append({'title':'Trips','url':url_for('.trip_list')})
+        g.menu_items.append({'title':'Log Entry','url':url_for('.log_list')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
