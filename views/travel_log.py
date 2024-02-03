@@ -151,16 +151,14 @@ def edit_log(rec_id=None):
     return view.render()
 
 
-@mod.route('trips/<path:path>',methods=['GET'])
-@mod.route('trips/',methods=['GET'])
+@mod.route('trips/<path:path>',methods=['GET','POST'])
+@mod.route('trips/',methods=['GET','POST'])
 @login_required
 def trip_list(path=None):
     setExits('trip')
 
     view = TableView(models.Trip,g.db)
-    # optionally specify the list fields
-    # view.list_fields = [
-    #     ]
+    view.list_fields = tl_views.trip.get_listing_field_list()
     view.base_layout = 'travel_log/layout.html'
     view.use_anytime_date_picker = not is_mobile_device()
 
@@ -193,8 +191,8 @@ def edit_trip(rec_id=None):
     return view.render()
 
 
-@mod.route('/cars/<path:path>',methods=['GET'])
-@mod.route('/cars/',methods=['GET'])
+@mod.route('/cars/<path:path>',methods=['GET','POST'])
+@mod.route('/cars/',methods=['GET','POST'])
 @login_required
 def car_list(path=None):
     setExits('car')
@@ -246,7 +244,7 @@ def after_view_get(view):
         view.rec.user_id = int(session.get('user_id',0))
 
 
-@mod.route('photos/',methods=['GET',])
+@mod.route('photos/',methods=['GET','POST'])
 @login_required
 def photos():
     return request.path
