@@ -1,11 +1,12 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
-from shotglass2.takeabeltof.utils import printException, cleanRecordID
-from shotglass2.users.admin import login_required, table_access_required
+from shotglass2.takeabeltof.date_utils import local_datetime_now
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device
+from shotglass2.users.admin import login_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
-from shotglass2.users.views import login, user
 import travel_log.models as models
+import travel_log.views as tl_views
 
 PRIMARY_TABLE = None
 
@@ -16,13 +17,29 @@ mod = Blueprint('travel_log',__name__,
                 )
 
 
-def setExits():
-    # g.listURL = url_for('.display')
-    # g.editURL = url_for('.edit')
-    # g.deleteURL = url_for('.display') + 'delete/'
+def setExits(which=''):
+    g.listURL = url_for('.home')
+    g.editRL = url_for('.home')
+    g.deleteURL = url_for('.home')
+    
+    if which == 'log':
+        g.listURL = url_for('.home')
+        g.editURL = url_for('.edit_log')
+        g.deleteURL = g.listURL + 'delete/'
+    elif which == 'trip':
+        g.listURL = url_for('.trip_list')
+        g.editURL = url_for('.edit_trip')
+        g.deleteURL = g.listURL + 'delete/'
+    elif which == 'car':
+        g.listURL = url_for('.car_list')
+        g.editURL = url_for('.edit_car')
+        g.deleteURL = g.listURL + 'delete/'
+        
     # g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
     create_menus()
 
+
+@mod.route('/<path:path>>',methods=['GET',])
 @mod.route('/',methods=['GET',])
 def home():
     """ The Welcom page """
@@ -68,21 +85,142 @@ def new_account():
     
     return redirect(url_for('user.register') + f'?next={url_for(".home")}')
 
-@mod.route('edit_trip/',methods=['GET',])
-@mod.route('edit_trip/<int:rec_id>',methods=['GET',])
+@mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
+@mod.route('edit_log/<int:rec_id>/',methods=['GET','POST'])
+@mod.route('edit_log/',methods=['GET','POST'])
+@login_required
+def edit_log(rec_id=None):
+    """ display the list of trips """
+    setExits('log')
+
+    # Need to pre-fetch the log record so I can populate the form
+    rec_id = cleanRecordID(request.form.get('id',rec_id))
+    rec = None
+
+    table =  models.LogEntry(g.db)
+    if rec_id < 0:
+        flash("Invalid Request")
+        return redirect(g.listURL)
+    if rec_id == 0:
+        rec = table.new()
+        # rec.entry_date = local_datetime_now()
+    else:
+        rec = table.get(rec_id)
+        if request.form:
+            table.update(rec,request.form)
+        if not rec.entry_date:
+            rec.entry_date = local_datetime_now()
+
+    view = EditView(models.LogEntry,g.db,rec_id)
+
+    view.edit_fields = tl_views.log_entry.get_edit_field_list(rec)
+    view.validate_form = tl_views.log_entry.validate_form
+    view.base_layout = "travel_log/form_layout.html"
+
+    if is_mobile_device:
+        view.use_anytime_date_picker = False
+
+    # Process the form?
+    if request.form and view.success:
+        view.update(save_after_update=True)
+        if view.success:
+            return redirect(g.listURL)
+            
+    #else display the form
+    return view.render()
+
+
+@mod.route('trips/<path:path>',methods=['GET'])
+@mod.route('trips/',methods=['GET'])
+@login_required
+def trip_list(path=None):
+    setExits('trip')
+
+    view = TableView(models.Trip,g.db)
+    # optionally specify the list fields
+    # view.list_fields = [
+    #     ]
+    view.base_layout = 'travel_log/layout.html'
+
+    return view.dispatch_request()
+    
+
+@mod.route('edit_trip/<int:rec_id>',methods=['GET','POST'])
+@mod.route('edit_trip/<int:rec_id>/',methods=['GET','POST'])
+@mod.route('edit_trip/',methods=['GET','POST'])
 @login_required
 def edit_trip(rec_id=None):
-    """ display the list of trips """
-    setExits()
-    data = {}
+    setExits('trip')
+    
+    rec_id = cleanRecordID(request.form.get('id',rec_id))
 
-    return render_template('travel_log/home.html',data=data)
+    view = EditView(models.Trip,g.db,rec_id)
+
+    view.validate_form = tl_views.trip.validate_form
+    view.base_layout = "travel_log/form_layout.html"
+    view.edit_fields = tl_views.trip.get_edit_field_list()
+
+    # Process the form?
+    if request.form and view.success:
+        view.update(save_after_update=True)
+        if view.success:
+            return redirect(g.listURL)
+            
+    #else display the form
+    return view.render()
 
 
-@mod.route('cars/',methods=['GET',])
+@mod.route('/cars/<path:path>',methods=['GET'])
+@mod.route('/cars/',methods=['GET'])
 @login_required
-def cars():
-    return request.path
+def car_list(path=None):
+    setExits('car')
+
+    view = TableView(models.Vehicle,g.db)
+    # optionally specify the list fields
+    # view.list_fields = [
+    #     ]
+    view.base_layout = 'travel_log/layout.html'
+
+    return view.dispatch_request()
+    
+
+@mod.route('/edit_car/<int:rec_id>',methods=['GET','POST'])
+@mod.route('/edit_car/<int:rec_id>/',methods=['GET','POST'])
+@mod.route('/edit_car/',methods=['GET','POST'])
+@login_required
+def edit_car(rec_id=None):
+    setExits('car')
+    
+    rec_id = cleanRecordID(request.form.get('id',rec_id))
+    if rec_id < 0:
+        flash('Invalid Request')
+        return redirect(g.listURL)
+    
+    view = EditView(models.Vehicle,g.db,rec_id)
+
+    view.validate_form = tl_views.vehicle.validate_form
+    view.base_layout = "travel_log/form_layout.html"
+    view.after_get_hook = after_view_get
+    view.edit_fields = tl_views.vehicle.get_edit_field_list()
+
+    # Process the form?
+    if request.form and view.success:
+        view.update(save_after_update=True)
+        if view.success:
+            return redirect(g.listURL)
+            
+    #else display the form
+    return view.render()
+
+def after_view_get(view):
+    import pdb;pdb.set_trace()
+    if request.form:
+        # In the case where a submit failed, load the form values
+        view.table.update(view.rec,request.form)
+    if view.rec and not view.rec.id and not view.rec.user_id:
+        # a new record
+        view.rec.user_id = int(session.get('user_id',0))
 
 
 @mod.route('photos/',methods=['GET',])
@@ -98,12 +236,11 @@ def account():
 
 
 
-    
 def validate_form(view):
     # Validate the form
-    goodForm = True
+    view.success = True
                 
-    return goodForm
+    return view.success
 
 
 def create_menus():
@@ -128,20 +265,11 @@ def create_menus():
 
     g.menu_items.append({'title':'Home','url':url_for('.home')})
     if 'user' in session:
-        g.menu_items.append({'title':'Cars','url':url_for('.cars')})
+        g.menu_items.append({'title':'Cars','url':url_for('.car_list')})
+        g.menu_items.append({'title':'Trips','url':url_for('.trip_list')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
-
-    
-    # # This makes a drop down menu for this application
-    # g.admin.register(models.TripSegment,url_for('trip_segment.display'),display_name='Trip Logging',header_row=True,minimum_rank_required=500,roles=['admin',])
-    # g.admin.register(models.TripSegment,
-    #     url_for('trip_segment.display'),
-    #     display_name='Trip Segments',
-    #     top_level=False,
-    #     minimum_rank_required=500,
-    # )
         
         
 def register_blueprints(app, subdomain = None) -> None:

@@ -35,6 +35,7 @@ def display(path=None):
     # optionally specify the list fields
     # view.list_fields = [
     #     ]
+    view.base_layout = 'travel_log/layout.html'
     
     return view.dispatch_request()
     
@@ -48,17 +49,7 @@ def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
-    view.edit_fields = [
-        {'name':'name','req':True},
-        ]
-    options = []
-    user = User(g.db).get(session.get('user'))
-    if user:
-        cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
-    if cars:
-        for car in cars:
-            options.append({'name':f'{car.name}','value':car.id})
-        view.edit_fields.append({'name':'vehicle_id','type':'select','label':'Vehicles','options':options,})
+    view.edit_fields = get_edit_field_list()
 
     # import pdb;pdb.set_trace()
     if request.form:
@@ -75,7 +66,29 @@ def validate_form(view):
                 
     return goodForm
 
+def get_edit_field_list() -> list:
+    """
+    Return a list of fields to include in the edit form
+
+    Returns:
+        a list of dicts
+    """
+
+    edit_fields = [
+        {'name':'name','req':True},
+        ]
+    options = []
+    user = User(g.db).get(session.get('user'))
+    if user:
+        cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
+    if cars:
+        for car in cars:
+            options.append({'name':f'{car.name}','value':car.id})
+        edit_fields.append({'name':'vehicle_id','type':'select','label':'Vehicles','options':options,})
+
+    return edit_fields
     
+
 def create_menus():
     """
     Create menu items for this module

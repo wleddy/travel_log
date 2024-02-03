@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "travel_log/layout.html" %}
 {% block title %}{{ g.title }}{% endblock %}
 
 {% from "_layout_helpers.html" import left_column_spacer, form_column_class %}
@@ -20,3 +20,15 @@
     </form>
 </div>
 {% endblock body %}
+
+{% block head %}
+{{ super() }}
+{% if data and data.table.table_name == 'log_entry' and data.rec.get('id') %}
+<script>
+    $().ready(function(){
+        $('select#trip_id').prop('disabled','disabled');
+    })
+</script>
+
+ {% endif %} <!-- data.table_name == trip -->
+{% endblock head%}

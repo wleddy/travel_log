@@ -97,11 +97,11 @@
                     <td class="home-trip-head" colspan="4">{{ rec.trip_name }} {{ rec.entry_date | short_abbr_date_string }}</td>
                 </tr>
             {% else %}
-                <tr>
+                <tr onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/'" >
                     <td>&nbsp;</td>
-                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.location_name}}</p></td>
-                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.entry_type}}</p></td>
-                    <td class="trip-row" ><p onclick="show_log_entry({{rec.id}});" >{{ rec.entry_date | local_time_string }}</p></td>
+                    <td class="trip-row" ><p>{{ rec.location_name}}</p></td>
+                    <td class="trip-row" ><p>{{ rec.entry_type}}</p></td>
+                    <td class="trip-row" ><p>{{ rec.entry_date | local_time_string }}</p></td>
                 </tr>
             {% endif %}
             {% endfor %}
