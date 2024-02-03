@@ -21,7 +21,7 @@ def setExits(which=''):
     g.listURL = url_for('.home')
     g.editRL = url_for('.home')
     g.deleteURL = url_for('.home')
-    
+    g.suppress_page_header = False
     if which == 'log':
         g.listURL = url_for('.log_list')
         g.editURL = url_for('.edit_log')
@@ -43,22 +43,29 @@ def setExits(which=''):
 def home():
     """ The Welcom page """
     setExits()
+    g.suppress_page_header = True
+
     data = {}
     # import pdb;pdb.set_trace()
     if'user_id' in session:
-        # Get the trip data
-        sql = f"""
-        select log_entry.id, log_entry.location_name,log_entry.entry_type,
-        log_entry.entry_date, trip.name as trip_name 
-        from log_entry
-        join trip on trip.id = log_entry.trip_id
-        join vehicle on vehicle.id = trip.vehicle_id
-        where vehicle.user_id = {session.get('user_id')}
-        order by log_entry.entry_date DESC
-        """
-        data['recs'] = models.LogEntry(g.db).query(sql)
 
-    return render_template('travel_log/home.html',data=data)
+        # create a vehicle record if none exists
+        if not models.Vehicle(g.db).select():
+            rec = models.Vehicle(g.db).new()
+            rec.name = "My Car"
+            rec.fuel_type = "Electric"
+            rec.fuel_capacity = 62
+            rec.user_id = session.get('user_id')
+            models.Vehicle(g.db).save(rec,commit=True)
+
+        # select the most recent trip record
+        data['trip'] = models.Trip(g.db).select_one(where=f"creation_date = (select max(trip.creation_date) from trip)")
+        # get logs of the most recent trips if any
+        data['log_entries'] = None
+        if data['trip']:
+            data['log_entries'] = models.LogEntry(g.db).select(where=f"trip_id = {data['trip'].id}")
+
+        return render_template('travel_log/home.html',data=data)
 
 @mod.route('logout/',methods=['GET',])
 def logout():
@@ -87,9 +94,10 @@ def new_account():
 @mod.route('log_list/<path:path>',methods=['GET','POST'])
 @mod.route('log_list/',methods=['GET','POST'])
 @login_required
-def log_list(path=None):
+def log_list(path=''):
     setExits('log')
-    
+    g.title = f"{plural(models.LogEntry.TABLE_IDENTITY,2)} Record List"
+
     view = TableView(models.LogEntry,g.db)
     # optionally specify the list fields
     view.list_fields = [
@@ -102,8 +110,12 @@ def log_list(path=None):
     
     view.base_layout = 'travel_log/layout.html'
     view.use_anytime_date_picker = not is_mobile_device()
-
+    
+    if view.next  and 'delete' not in path:
+        return redirect(view.next) # was called from somewhere else
+    
     return view.dispatch_request()
+    
     
 
 @mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
@@ -113,6 +125,7 @@ def log_list(path=None):
 def edit_log(rec_id=None):
     """ display the list of trips """
     setExits('log')
+    g.title = f"Edit {models.LogEntry.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
     # Need to pre-fetch the log record so I can populate the form
     rec_id = cleanRecordID(request.form.get('id',rec_id))
@@ -133,6 +146,7 @@ def edit_log(rec_id=None):
             rec.entry_date = local_datetime_now()
 
     view = EditView(models.LogEntry,g.db,rec_id)
+    # import pdb;pdb.set_trace()
 
     view.edit_fields = tl_views.log_entry.get_edit_field_list(rec)
     view.validate_form = tl_views.log_entry.validate_form
@@ -145,6 +159,8 @@ def edit_log(rec_id=None):
     if request.form and view.success:
         view.update(save_after_update=True)
         if view.success:
+            if view.next:
+                return redirect(view.next)
             return redirect(g.listURL)
             
     #else display the form
@@ -154,7 +170,7 @@ def edit_log(rec_id=None):
 @mod.route('trips/<path:path>',methods=['GET','POST'])
 @mod.route('trips/',methods=['GET','POST'])
 @login_required
-def trip_list(path=None):
+def trip_list(path=''):
     setExits('trip')
 
     view = TableView(models.Trip,g.db)
@@ -162,6 +178,11 @@ def trip_list(path=None):
     view.base_layout = 'travel_log/layout.html'
     view.use_anytime_date_picker = not is_mobile_device()
 
+    # import pdb;pdb.set_trace()
+
+    if view.next  and 'delete' not in path:
+        return redirect(view.next) # was called from somewhere else
+    
     return view.dispatch_request()
     
 
@@ -171,8 +192,11 @@ def trip_list(path=None):
 @login_required
 def edit_trip(rec_id=None):
     setExits('trip')
-    
+    g.title = f"Edit {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
+
     rec_id = cleanRecordID(request.form.get('id',rec_id))
+
+    # import pdb;pdb.set_trace()
 
     view = EditView(models.Trip,g.db,rec_id)
 
@@ -185,6 +209,8 @@ def edit_trip(rec_id=None):
     if request.form and view.success:
         view.update(save_after_update=True)
         if view.success:
+            if view.next:
+                return redirect(view.next)
             return redirect(g.listURL)
             
     #else display the form
@@ -194,7 +220,7 @@ def edit_trip(rec_id=None):
 @mod.route('/cars/<path:path>',methods=['GET','POST'])
 @mod.route('/cars/',methods=['GET','POST'])
 @login_required
-def car_list(path=None):
+def car_list(path=''):
     setExits('car')
 
     view = TableView(models.Vehicle,g.db)
@@ -203,6 +229,9 @@ def car_list(path=None):
     #     ]
     view.base_layout = 'travel_log/layout.html'
 
+    if view.next  and 'delete' not in path:
+        return redirect(view.next) # was called from somewhere else
+    
     return view.dispatch_request()
     
 
@@ -212,6 +241,7 @@ def car_list(path=None):
 @login_required
 def edit_car(rec_id=None):
     setExits('car')
+    g.title = f"Edit {models.Vehicle.TABLE_IDENTITY.replace('_',' ').title()} Record"
     
     rec_id = cleanRecordID(request.form.get('id',rec_id))
     if rec_id < 0:
@@ -229,13 +259,15 @@ def edit_car(rec_id=None):
     if request.form and view.success:
         view.update(save_after_update=True)
         if view.success:
+            if view.next:
+                return redirect(view.next)
             return redirect(g.listURL)
             
     #else display the form
     return view.render()
 
 def after_view_get(view):
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     if request.form:
         # In the case where a submit failed, load the form values
         view.table.update(view.rec,request.form)

@@ -3,10 +3,13 @@
 {% block head %}
 {{ super() }}
 <style>
-    h2 {
+    h2, h3, p {
         text-align: center;
     }
 
+    #trip_name {
+        cursor: pointer;
+    }
     #login-section {
         text-align: center;
 
@@ -21,8 +24,8 @@
         margin-top: 12pt;
     }
     #log-body-contain {
-        width:70%;
-        max-width:250pt;
+        width:90%;
+        max-width:500pt;
         margin:20pt auto 10pt auto;
     }
     #trip-list-contain {
@@ -50,27 +53,9 @@
     .home-trip-head {
         font-weight: bold;
     }
-    #log-entry, #log-entry > div, #number-pad {
-        display: none;
-    } 
+
 </style>
 
-<script>
-    function show_log_entry(which) {
-        alert('show log')
-        $("#log-entry").show();
-        $('#log-entry-'+which.toString()).show();
-        $('#trip-list-contain').hide();
-    }
-    function show_home() {
-        $('div#log-entry').hide(300)
-        $('div#number-pad').hide(300) 
-        $('div#trip-list-contain').show(300);
-    }
-    
-    $(show_home);
-    
-</script>
 {% endblock head %}
 
 
@@ -85,46 +70,30 @@
     </div>
 {% else %}
     <div id="trip-list-contain" >
-        <h2>Trips</h2>
-        {% if data.recs %}
-            <table id="home-trip-list">
-            {% set prev_trip = [''] %}
-            {% for rec in data.recs %}
-            {% if rec.trip_name != prev_trip[0] %}
-            {% set _ = prev_trip.pop() %}
-            {% set _ = prev_trip.append(rec.trip_name) %}
-                <tr>
-                    <td class="home-trip-head" colspan="4">{{ rec.trip_name }} {{ rec.entry_date | short_abbr_date_string }}</td>
-                </tr>
+        <h2>Your Current Trip</h2>
+        {% if data.trip %}
+            <h3 id="trip_name" title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
+            {% if data.log_entries %}
+                <table id="home-trip-list">
+                {% for rec in data.log_entries %}
+                    <tr onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'" >
+                        <td>&nbsp;</td>
+                        <td class="trip-row" ><p>{{ rec.location_name}}</p></td>
+                        <td class="trip-row" ><p>{{ rec.entry_type}}</p></td>
+                        <td class="trip-row" ><p>{{ rec.entry_date | local_time_string }}</p></td>
+                    </tr>
+                {% endfor %}
+                </table>
             {% else %}
-                <tr onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/'" >
-                    <td>&nbsp;</td>
-                    <td class="trip-row" ><p>{{ rec.location_name}}</p></td>
-                    <td class="trip-row" ><p>{{ rec.entry_type}}</p></td>
-                    <td class="trip-row" ><p>{{ rec.entry_date | local_time_string }}</p></td>
-                </tr>
+                <p>No Log Entires Yet... <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
             {% endif %}
-            {% endfor %}
-            </table>
         {% else %}
-        <p>Nothing to list</p>
+            <p>
+                You are not currenly on a Trip. 
+                <a href="{{url_for("travel_log.edit_trip")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Start a Trip?</a>
+            </p>
         {% endif %}
     </div>
-    <div id="log-entry"  >
-        <h2>Edit Log</h2>
-        <div id="log-entry-2"  >
-            <p>This is a log entry 2...</p>
-            <input type="button" value="Done" onclick="show_home()" >
-        </div>
-        <div id="log-entry-3"  >
-            <p>This is a log entry 3...</p>
-            <input type="button" value="Done" onclick="show_home()" >
-        </div>
-    </div>
-    <div id="number-pad"   >
-        <p>Display a nice big number pad for entry</p>
-    </div>
-
 {% endif %}
 </div>
 {% endblock body %}

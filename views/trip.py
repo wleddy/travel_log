@@ -71,9 +71,9 @@ def get_edit_field_list() -> list:
     Returns:
         a list of dicts
     """
-
+    # import pdb;pdb.set_trace()
     edit_fields = [
-        {'name':'name','req':True},
+        {'name':'name','req':True,'label':'Trip Name'},
         ]
     options = []
     user = User(g.db).get(session.get('user'))
