@@ -12,7 +12,7 @@ PRIMARY_TABLE = None
 
 mod = Blueprint('travel_log',__name__, 
                 template_folder='templates/travel_log/', 
-                static_folder='static/travel_log/',
+                static_folder='static/',
                 url_prefix='/travel_log',
                 )
 
@@ -65,7 +65,7 @@ def home():
         if data['trip']:
             data['log_entries'] = models.LogEntry(g.db).select(where=f"trip_id = {data['trip'].id}")
 
-        return render_template('travel_log/home.html',data=data)
+    return render_template('travel_log/home.html',data=data)
 
 @mod.route('logout/',methods=['GET',])
 def logout():
