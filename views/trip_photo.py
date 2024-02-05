@@ -47,9 +47,12 @@ def edit(rec_id=None):
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
 
-    if request.form:
+    if request.form and view.success:
+        # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:
+            if view.next:
+                return redirect(view.next)
             return redirect(g.listURL)
 
     return view.render()
