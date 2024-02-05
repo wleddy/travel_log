@@ -13,7 +13,7 @@ Use this as a template to override default_style.css
     --primary-color:#4b9bec;
     --primary-contrast: #fff;
     --primary-border: rgb(63, 36, 20);
-    --secondary-color: #95baf4; 
+    --secondary-color: #c9ddfd; 
     --secondary-contrast: #000;
     --secondary-border:#e3e5f8;
     --menu-border: rgb(247, 240, 230);
@@ -27,7 +27,7 @@ Use this as a template to override default_style.css
         --primary-color:#4b9bec;
         --primary-contrast: #fff;
         --primary-border: rgb(63, 36, 20);
-        --secondary-color: #95baf4; 
+        --secondary-color: #c9ddfd; 
         --secondary-contrast: #000;
         --secondary-border:#e3e5f8;
         --menu-border: rgb(247, 240, 230);

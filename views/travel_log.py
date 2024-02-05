@@ -21,19 +21,22 @@ def setExits(which=''):
     g.listURL = url_for('.home')
     g.editRL = url_for('.home')
     g.deleteURL = url_for('.home')
-    g.suppress_page_header = False
+    g.suppress_page_header = True
     if which == 'log':
         g.listURL = url_for('.log_list')
         g.editURL = url_for('.edit_log')
         g.deleteURL = g.listURL + 'delete/'
+        g.suppress_page_header = False
     elif which == 'trip':
         g.listURL = url_for('.trip_list')
         g.editURL = url_for('.edit_trip')
         g.deleteURL = g.listURL + 'delete/'
+        g.suppress_page_header = False
     elif which == 'car':
         g.listURL = url_for('.car_list')
         g.editURL = url_for('.edit_car')
         g.deleteURL = g.listURL + 'delete/'
+        g.suppress_page_header = False
         
     create_menus()
 
@@ -43,7 +46,6 @@ def setExits(which=''):
 def home():
     """ The Welcom page """
     setExits()
-    g.suppress_page_header = True
 
     data = {}
     # import pdb;pdb.set_trace()
@@ -58,8 +60,9 @@ def home():
             rec.user_id = session.get('user_id')
             models.Vehicle(g.db).save(rec,commit=True)
 
-        # select the most recent trip record
-        data['trip'] = models.Trip(g.db).select_one(where=f"creation_date = (select max(trip.creation_date) from trip)")
+        # select the most recent trip record or at least the one the user wants
+        trip_id = get_current_trip_id()
+        data['trip'] = models.Trip(g.db).get(trip_id)
         # get logs of the most recent trips if any
         data['log_entries'] = None
         if data['trip']:
@@ -216,6 +219,43 @@ def edit_trip(rec_id=None):
     #else display the form
     return view.render()
 
+@mod.route('edit_current_trip',methods=['GET','POST'])
+@mod.route('edit_current_trip/',methods=['GET','POST'])
+@login_required
+def edit_current_trip():
+    """
+    This is a shortcut from the menu to edit the current trip Record
+
+    Returns:
+        flask response
+    """
+    
+    # try to get the current trip from the session...
+    rec_id = get_current_trip_id()
+
+    return redirect(url_for('.edit_trip') + str(rec_id) + "/?next=" + url_for('.home'))
+
+
+@mod.route('select_trip',methods=['GET','POST'])
+@mod.route('select_trip/',methods=['GET','POST'])
+@login_required
+def select_trip():
+    """
+    Select an existing trip to add or edit entries
+
+    This will set session['current_trip_id'] to the id of the 
+    trip selected
+
+    Returns:
+        flask response
+    """
+    setExits('trip')
+
+    if request.args:
+        session['current_trip_id'] = request.args['trip_id']
+
+    return request.path
+
 
 @mod.route('/cars/<path:path>',methods=['GET','POST'])
 @mod.route('/cars/',methods=['GET','POST'])
@@ -295,6 +335,30 @@ def validate_form(view):
                 
     return view.success
 
+def get_current_trip_id() -> int:
+    """
+    get the id of the trip that we want to work with
+
+    This will get/set session['current_trip_id']
+
+    Returns:
+        the trip id as int
+    """
+
+    trip_id = session.get('current_trip_id')
+    if trip_id:
+        return trip_id
+    
+    # Get the most recent trip
+    rec = models.Trip(g.db).select_one(where=f"creation_date = (select max(trip.creation_date) from trip)")
+    if rec:
+        trip_id = rec.id
+
+    if trip_id:
+        session['current_trip_id'] = trip_id
+
+    return trip_id
+
 
 def create_menus():
     """
@@ -308,18 +372,16 @@ def create_menus():
     """
     g.menu_items = []
 
-    # # Static dropdown menu...
-    # g.menu_items.append({'title':'Drop down header','drop_down_menu':{
-    #         'name':'First','url':url_for('.something'),
-    #         'name':'Second','url':url_for('.another'),
-    #         }
-    #     })
-    # single line menu
 
     g.menu_items.append({'title':'Home','url':url_for('.home')})
     if 'user' in session:
         g.menu_items.append({'title':'Cars','url':url_for('.car_list')})
-        g.menu_items.append({'title':'Trips','url':url_for('.trip_list')})
+        g.menu_items.append({'title':'Trips','drop_down_menu':[
+            {'title':'Edit Current Trip','url':url_for('.edit_current_trip'),},
+            {'title':'Select a Trip','url':url_for('.select_trip'),},
+            {'title':'Trip List','url':url_for('.trip_list'),},
+            ]
+        })
         g.menu_items.append({'title':'Log Entry','url':url_for('.log_list')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         g.menu_items.append({'title':'Account','url':url_for('.account')})
