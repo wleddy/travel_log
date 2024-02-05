@@ -1,0 +1,90 @@
+/*
+***************************************************
+Use this as a template to override default_style.css
+***************************************************
+
+
+
+/* colors */
+
+/* Travel Log Sceme */
+:root {
+    /* color:powderblue; */
+    --primary-color:#4b9bec;
+    --primary-contrast: #fff;
+    --primary-border: rgb(63, 36, 20);
+    --secondary-color: #95baf4; 
+    --secondary-contrast: #000;
+    --secondary-border:#e3e5f8;
+    --menu-border: rgb(247, 240, 230);
+   }
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color: #f8f8f8;
+        background-color: #747272;
+
+        --primary-color:#4b9bec;
+        --primary-contrast: #fff;
+        --primary-border: rgb(63, 36, 20);
+        --secondary-color: #95baf4; 
+        --secondary-contrast: #000;
+        --secondary-border:#e3e5f8;
+        --menu-border: rgb(247, 240, 230);
+    
+        }
+    .datatable tr {
+        color:black;
+        background-color:lightgray;
+    }
+    .w3-striped tbody tr:nth-child(even) {
+        background-color:#e1e0e0;
+    }
+}
+
+   /* the actual styles... */
+.w3-menu-color,.w3-drop-menu-hover-color:hover,
+.w3-primary-color,.w3-primary-hover-color:hover,
+.w3-drop-menu-section-hover-color:hover,.w3-drop-menu-section-color:hover,
+.w3-drop-menu-section-color
+{color:var(--primary-contrast)!important;background-color:var(--primary-color)!important}
+.w3-primary-border-color,.w3-primary-hover-border-color:hover{border-color:var(--primary-border)!important}
+
+.w3-menu-hover-color:hover,
+.w3-secondary-color,.w3-secondary-hover-color:hover,.w3-drop-menu-color,
+.w3-label-color,.w3-label-hover-color:hover,.roster-hover-color:hover
+{color:var(--secondary-contrast)!important;background-color:var(--secondary-color)!important}
+.w3-secondary-border-color,.w3-secondary-hover-border-color:hover{border-color:var(--secondary-border)!important}
+
+.w3-menu-border {
+    border:solid 1pt var(--menu-border)!important;
+}
+
+/* styles for the pagination in the record lists */
+
+/* .sg.pagination {} */
+.sg-page-current {
+    font-weight: bold;
+}
+a.sg-page-end, a.sg-page-prev,
+a.sg-page-next, a.sg-page-select,
+a.sg-page-begin
+    {
+    text-decoration: none;
+}
+.sg-page-end, .sg-page-begin,
+.sg-page-next, .sg-page-prev  {
+    background-color: var(--primary-color);
+    color: var(--primary-contrast);
+    padding:2pt;
+}
+.sg-page-begin.sg-page-inactive, .sg-page-end.sg-page-inactive,
+.sg-page-begin.sg-page-current, .sg-page-end.sg-page-current,
+.sg-page-next.sg-page-inactive, .sg-page-prev.sg-page-inactive,
+.sg-page-next.sg-page-current, .sg-page-prev.sg-page-current {
+    color: var(--secondary-contrast);
+    background-color: var(--secondary-color);
+    padding:2pt;
+}
+
+
