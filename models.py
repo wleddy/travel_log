@@ -196,8 +196,7 @@ class TripPhoto(SqliteTable):
             'image_date' DATETIME,
             'full' BLOB,
             'thumbnail' BLOB,
-            'trip_segment_id' INT,
-             FOREIGN KEY (trip_segment_id) REFERENCES trip_segment(id) ON DELETE CASCADE
+            'log_entry' INT REFERENCES log_entry(id) ON DELETE CASCADE
             """
         super().create_table(sql)
         
