@@ -66,13 +66,12 @@ def home():
         # get logs of the most recent trips if any
         data['log_entries'] = None
         if data['trip']:
-            sql = """
-                select log_entry.*, null as distance from log_entry
+            sql = f"""
+                select *, null as distance from log_entry where trip_id = {trip_id}
             """
             recs = models.LogEntry(g.db).query(sql)
-            # import pdb;pdb.set_trace()
-            data['log_entries'] = [ rec.asdict() for rec in models.LogEntry(g.db).query(sql)]
-            if data['log_entries']:
+            if recs:
+                data['log_entries'] = [ rec.asdict() for rec in recs]
                 odometer_start = None
                 for x in range(len(data['log_entries'])-1):
                     rec = data['log_entries'][x]

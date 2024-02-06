@@ -58,6 +58,9 @@
     .memo {
         margin: 0 0 0 10pt;
     }
+    .no_log, .no_trip {
+        margin-top:6pt !important;
+    }
 </style>
 
 {% endblock head %}
@@ -100,10 +103,10 @@
             {% endfor %}
         </div>
             {% else %}
-                <p>No Log Entires Yet... <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
+                <p class="no_log" >No Log Entires Yet... <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
             {% endif %}
         {% else %}
-            <p>
+            <p class="no_trip">
                 You are not currenly on a Trip. 
                 <a href="{{url_for("travel_log.edit_trip")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Start a Trip?</a>
             </p>
