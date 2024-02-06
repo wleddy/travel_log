@@ -137,7 +137,13 @@ def log_list(path=''):
     
     return view.dispatch_request()
     
-    
+
+@mod.route('add_log/',methods=['GET','POST'])
+@login_required
+def add_log():
+    setExits()
+    return redirect(url_for('.edit_log') + f'0/?next={g.listURL}')
+
 
 @mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
 @mod.route('edit_log/<int:rec_id>/',methods=['GET','POST'])
@@ -146,7 +152,7 @@ def log_list(path=''):
 def edit_log(rec_id=None):
     """ display the list of trips """
     setExits('log')
-    g.title = f"Edit {models.LogEntry.TABLE_IDENTITY.replace('_',' ').title()} Record"
+    g.title = f" {models.LogEntry.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
     # Need to pre-fetch the log record so I can populate the form
     rec_id = cleanRecordID(request.form.get('id',rec_id))
@@ -178,6 +184,11 @@ def edit_log(rec_id=None):
     view.base_layout = "travel_log/form_layout.html"
 
     view.use_anytime_date_picker = not is_mobile_device()
+
+    if not view.rec.id:
+        g.title = 'New' + g.title
+    else:
+        g.title = 'Edit' + g.title
 
     # Process the form?
     if request.form and view.success:
@@ -211,13 +222,21 @@ def trip_list(path=''):
     return view.dispatch_request()
     
 
+@mod.route('add_trip/',methods=['GET','POST'])
+@login_required
+def add_trip():
+    setExits()
+    return redirect(url_for('.edit_trip') + f'0/?next={g.listURL}')
+
+
 @mod.route('edit_trip/<int:rec_id>',methods=['GET','POST'])
 @mod.route('edit_trip/<int:rec_id>/',methods=['GET','POST'])
 @mod.route('edit_trip/',methods=['GET','POST'])
 @login_required
 def edit_trip(rec_id=None):
     setExits('trip')
-    g.title = f"Edit {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
+
+    g.title = f" {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
     rec_id = cleanRecordID(request.form.get('id',rec_id))
 
@@ -230,6 +249,11 @@ def edit_trip(rec_id=None):
     view.edit_fields = tl_views.trip.get_edit_field_list()
     view.use_anytime_date_picker = not is_mobile_device()
 
+    if not view.rec.id:
+        g.title = 'New' + g.title
+    else:
+        g.title = 'Edit' + g.title
+ 
     # Process the form?
     if request.form and view.success:
         view.update(save_after_update=True)
@@ -412,12 +436,12 @@ def create_menus():
     if 'user' in session:
         g.menu_items.append({'title':'Cars','url':url_for('.car_list')})
         g.menu_items.append({'title':'Trips','drop_down_menu':[
-            {'title':'Edit Current Trip','url':url_for('.edit_current_trip'),},
+            {'title':'Add a Log Entry','url':url_for('.add_log'),},
+            {'title':'Edit this Trip','url':url_for('.edit_current_trip'),},
             {'title':'Select a Trip','url':url_for('.select_trip'),},
-            {'title':'Trip List','url':url_for('.trip_list'),},
+            {'title':'Add a new Trip','url':url_for('.add_trip'),},
             ]
         })
-        g.menu_items.append({'title':'Log Entry','url':url_for('.log_list')})
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
