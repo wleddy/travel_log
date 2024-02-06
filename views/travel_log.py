@@ -66,7 +66,24 @@ def home():
         # get logs of the most recent trips if any
         data['log_entries'] = None
         if data['trip']:
-            data['log_entries'] = models.LogEntry(g.db).select(where=f"trip_id = {data['trip'].id}")
+            sql = """
+                select log_entry.*, null as distance from log_entry
+            """
+            recs = models.LogEntry(g.db).query(sql)
+            # import pdb;pdb.set_trace()
+            data['log_entries'] = [ rec.asdict() for rec in models.LogEntry(g.db).query(sql)]
+            if data['log_entries']:
+                odometer_start = None
+                for x in range(len(data['log_entries'])-1):
+                    rec = data['log_entries'][x]
+                    if rec['odometer']:
+                        if odometer_start is None:
+                            odometer_start = rec['odometer']
+                            data['log_entries'][x]['distance'] = 0
+                            continue
+                        if rec['odometer'] and rec['odometer'] > odometer_start:
+                            data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
+
 
     return render_template('travel_log/home.html',data=data)
 
@@ -266,9 +283,9 @@ def select_trip():
     data = {}
     sql = """
         select id,name,
-        coalesce ((select max(log_entry.entry_date) from log_entry),trip.creation_date) as entry_date 
+        coalesce ((select min(log_entry.entry_date) from log_entry where trip_id = trip.id),trip.creation_date) as entry_date 
         from trip
-        order by trip.creation_date DESC 
+        order by entry_date 
     """
     data['recs'] = models.Trip(g.db).query(sql)
 

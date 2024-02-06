@@ -3,8 +3,9 @@
 {% block head %}
 {{ super() }}
 <style>
-    h2, h3, p {
+    h2, h3{
         text-align: center;
+        margin:0;
     }
 
     #trip_name {
@@ -28,13 +29,14 @@
         max-width:500pt;
         margin:20pt auto 10pt auto;
     }
-    #trip-list-contain {
-        border:black solid 2pt;
-        width:90%;
-        margin: auto;
-        height: 400px;
-        scroll-behavior: auto;
+   #trip-list-contain p {
+         margin:0;
     }
+    #trip-list-contain h4 {
+        margin:3pt 0 0 0;
+        border-top: black 2pt solid;
+    }
+
     table#home-trip-list, table#home-trip-list td.trip-row{
         border-bottom: #666;
         border-bottom-width: 1pt;
@@ -42,7 +44,7 @@
         border-collapse: collapse;
         padding:3pt;
     }
-    table#home-trip-list td.trip-row p {
+    #home-trip-list {
         cursor: pointer;
     }
 
@@ -53,7 +55,9 @@
     .home-trip-head {
         font-weight: bold;
     }
-
+    .memo {
+        margin: 0 0 0 10pt;
+    }
 </style>
 
 {% endblock head %}
@@ -70,20 +74,31 @@
     </div>
 {% else %}
     <div id="trip-list-contain" >
-        <h2>Your Current Trip</h2>
+        <h2  class="w3-primary-color" >Your Current Trip</h2>
         {% if data.trip %}
-            <h3 id="trip_name" title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
+        <div id="trip-list-contain" >
+            <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
             {% if data.log_entries %}
-                <table id="home-trip-list">
-                {% for rec in data.log_entries %}
-                    <tr onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'" >
-                        <td>&nbsp;</td>
-                        <td class="trip-row" ><p>{{ rec.location_name}}</p></td>
-                        <td class="trip-row" ><p>{{ rec.entry_type}}</p></td>
-                        <td class="trip-row" ><p>{{ rec.entry_date | local_time_string }}</p></td>
-                    </tr>
-                {% endfor %}
-                </table>
+            {% for rec in data.log_entries %}
+                <div id="home-trip-list"  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
+                    <div class="w3-row w3-row-padding" >
+                        <h4 class="w3-col  m8 l8 s8" ><strong>Where:</strong> {{rec.location_name}}</h4>
+                        <h4 class="w3-col  m4 l4 s4" ><strong class="w3-hide-small" >When:</strong> {{ rec.entry_date | local_time_string}}</h4>
+                    </div>
+                    <div class="w3-row w3-row-padding" >
+                        <p class="w3-col m8 l8 s8"><strong>Log Type:</strong> {{ rec.entry_type}}</p>
+                        {% if rec.distance != None %}
+                        <p class="w3-col m4 l4 s4"><strong>Dist.:</strong> {{ rec.distance }}mi.</p>
+                        {% endif %}
+                    </div>
+                    {% if rec.memo %}
+                    <div class="w3-row w3-row-padding memo" >
+                        <p class="w3-col ">{{ rec.memo}}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
             {% else %}
                 <p>No Log Entires Yet... <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
             {% endif %}
