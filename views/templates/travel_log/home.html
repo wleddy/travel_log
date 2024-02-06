@@ -61,7 +61,22 @@
     .no_log, .no_trip {
         margin-top:6pt !important;
     }
+    .more span:first-child {
+        display:block;
+        color:purple;
+        font-weight: bold;
+    }
+    .more span:nth-child(2) {
+        display:none;
+    }
+
 </style>
+
+<script>
+    function show_more(which) {
+        $("#" + which + " span").toggle(500)
+    }
+</script>
 
 {% endblock head %}
 
@@ -83,7 +98,8 @@
             <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
             {% if data.log_entries %}
             {% for rec in data.log_entries %}
-                <div id="home-trip-list"  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
+            <div id="home-trip-list" >
+                <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
                     <div class="w3-row w3-row-padding" >
                         <h4 class="w3-col  m8 l8 s8" ><strong>Where:</strong> {{rec.location_name}}</h4>
                         <h4 class="w3-col  m4 l4 s4" ><strong class="w3-hide-small" >When:</strong> {{ rec.entry_date | local_time_string}}</h4>
@@ -94,11 +110,14 @@
                         <p class="w3-col m4 l4 s4"><strong>Dist.:</strong> {{ rec.distance }}mi.</p>
                         {% endif %}
                     </div>
+                </div>
                     {% if rec.memo %}
-                    <div class="w3-row w3-row-padding memo" >
-                        <p class="w3-col ">{{ rec.memo}}</p>
+                    <div id="log_memo_contain" >
+                        <div class="w3-row w3-row-padding memo " >
+                            <p id="log_memo_{{ rec.id }}" class="w3-col log_memo more" onclick="show_more('log_memo_{{ rec.id }}')">{{ rec.memo | more | sanitize  | safe }}</p>
+                        </div>
                     </div>
-                    {% endif %}
+                   {% endif %}
                 </div>
             {% endfor %}
         </div>
