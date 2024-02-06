@@ -162,7 +162,6 @@ class Vehicle(SqliteTable):
             """
         super().create_table(sql)
         
-        
     @property
     def _column_list(self):
         """A list of dicts used to add fields to an existing table.
@@ -175,7 +174,48 @@ class Vehicle(SqliteTable):
         
         return column_list
     
-    
+class FuelType(SqliteTable):
+    """
+    Create a temporary table to hold the vehicle types
+
+    Vehicle types are defined here.
+
+    Arguments:
+        SqliteTable -- Basic table
+
+    Returns:
+        Nothing
+    """
+
+    TABLE_IDENTITY = 'vehicle_type'
+
+    def __init__(self,db_connection):
+            super().__init__(db_connection)
+            self.table_name = self.TABLE_IDENTITY
+            self.order_by_col = 'lower(name)'
+            self.defaults = {}
+
+    def create_table(self):
+
+        sql = f"""
+            drop table if exists {self.table_name}
+        """
+        self.db.execute(sql)
+        sql=f"""
+            CREATE TEMPORARY TABLE {self.table_name} (
+            'id' INTEGER NOT NULL PRIMARY KEY,
+            'name' TEXT
+            )
+        """
+        self.db.execute(sql)
+
+        self.db.execute(f"INSERT INTO {self.table_name} ('name') VALUES ('Electric')")
+        self.db.execute(f"INSERT INTO {self.table_name} ('name') VALUES ('Gas')")
+        self.db.execute(f"INSERT INTO {self.table_name} ('name') VALUES ('Human')")
+        self.db.commit()
+        
+
+
 class TripPhoto(SqliteTable):
     """Handle some basic interactions this table"""
 

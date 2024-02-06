@@ -77,9 +77,14 @@ def get_edit_field_list() ->list:
 
     edit_fields = [
         {'name':'name','req':True},
-        {'name':'fuel_type','type':'select', 'options': [ {'name':'Electric'}, {'name':'Gas'},]},
-        {'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh or Gal.'},
     ]
+    options = []
+    recs = models.FuelType(g.db).select()
+    for rec in recs:
+        options.append({'name':rec.name,'value':rec.name})
+    edit_fields.append({'name':'fuel_type','type':'select', 'options': options,})
+    edit_fields.append({'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh, Gal. or Hours'})
+    
     user_options = []
     users = User(g.db).select()
     for user in users:
