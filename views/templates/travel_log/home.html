@@ -96,8 +96,8 @@
         {% if data.trip %}
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
-            <p><strong>Your Ride: </strong>{{ data.vehicle | default('??',True)}}</p>
             {% if data.log_entries %}
+            <p><strong>Your Ride: </strong>{{ data.log_entries[0].vehicle | default('??',True)}}</p>
             {% for rec in data.log_entries %}
             <div id="home-trip-list" >
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
