@@ -1,0 +1,32 @@
+{% extends 'travel_log/layout.html' %}
+
+{% block head %}
+<style>
+    .trip_row {
+        cursor: pointer;
+    }
+    .row_list {
+        max-width: 400pt;
+    }
+</style>
+{% endblock head %}
+
+{% block body %}
+{% if data and data.recs %}
+    <div class="w3-container row_list" >
+        <div class="w3-row w3-secondary-color w3-row-padding">
+            <h4 class="w3-col  m6 l6 s6" >Trip Name</h4>
+            <h4 class="w3-col  m6 l6 s6" >Trip Date</h4>
+        </div>
+    {% for rec in data.recs %}
+        <div class="w3-row w3-border w3-row-padding trip_row" onclick="window.location='{{url_for("travel_log.select_trip")}}?trip_id={{rec.id}}'">
+            <p class="w3-col m6 l6 s6" >{{rec.name}}</s>
+            <p class="w3-col m6 l6 s6" >{{rec.entry_date | abbr_date_string }}</p>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <h2>Sorry. There were no trips to list.</h2>
+{% endif %}
+
+{% endblock body %}

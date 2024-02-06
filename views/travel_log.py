@@ -140,7 +140,7 @@ def edit_log(rec_id=None):
         return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
-        # rec.entry_date = local_datetime_now()
+        
     else:
         rec = table.get(rec_id)
         if request.form:
@@ -151,15 +151,19 @@ def edit_log(rec_id=None):
     view = EditView(models.LogEntry,g.db,rec_id)
     # import pdb;pdb.set_trace()
 
+    # Set the trip id for new records
+    if not view.rec.trip_id:
+        view.rec.trip_id = get_current_trip_id()
+        
     view.edit_fields = tl_views.log_entry.get_edit_field_list(rec)
     view.validate_form = tl_views.log_entry.validate_form
     view.base_layout = "travel_log/form_layout.html"
 
     view.use_anytime_date_picker = not is_mobile_device()
 
-
     # Process the form?
     if request.form and view.success:
+        # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:
             if view.next:
@@ -243,18 +247,32 @@ def select_trip():
     """
     Select an existing trip to add or edit entries
 
-    This will set session['current_trip_id'] to the id of the 
-    trip selected
+    This will set the current_trip_date field of the selected trip
+    record to the current UTC datetime which will make it the current
+    trip.
 
     Returns:
         flask response
     """
-    setExits('trip')
+    setExits()
 
     if request.args:
-        session['current_trip_id'] = request.args['trip_id']
+        trip_id = cleanRecordID(request.args['trip_id'])
+        rec = models.Trip(g.db).get(trip_id)
+        models.Trip(g.db).save(rec) # Updates current_trip_date to utcnow
 
-    return request.path
+        return redirect(g.listURL)
+    
+    data = {}
+    sql = """
+        select id,name,
+        coalesce ((select max(log_entry.entry_date) from log_entry),trip.creation_date) as entry_date 
+        from trip
+        order by trip.creation_date DESC 
+    """
+    data['recs'] = models.Trip(g.db).query(sql)
+
+    return render_template('travel_log/trip_select_list.html',data=data)
 
 
 @mod.route('/cars/<path:path>',methods=['GET','POST'])
@@ -337,20 +355,19 @@ def validate_form(view):
 
 def get_current_trip_id() -> int:
     """
-    get the id of the trip that we want to work with
+    Get the id of the Trip record with the most recent 'current_trip_date' 
 
-    This will get/set session['current_trip_id']
+    current_trip_date is set to the current UTC time whenever a LogEntry record
+    is updated. 
 
     Returns:
         the trip id as int
     """
 
-    trip_id = session.get('current_trip_id')
-    if trip_id:
-        return trip_id
-    
-    # Get the most recent trip
-    rec = models.Trip(g.db).select_one(where=f"creation_date = (select max(trip.creation_date) from trip)")
+    trip_id = None
+
+    # Get the most recently edited trip or log_entry
+    rec = models.Trip(g.db).select_one(order_by="current_trip_date DESC")
     if rec:
         trip_id = rec.id
 

@@ -1,7 +1,10 @@
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
-from shotglass2.takeabeltof.date_utils import local_datetime_now
-        
+from shotglass2.takeabeltof.date_utils import local_datetime_now, getDatetimeFromString
+from datetime import datetime
+import pytz
+
+
 class LogEntry(SqliteTable):
     """Handle some basic interactions this table"""
 
@@ -11,7 +14,10 @@ class LogEntry(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'entry_date'
-        self.defaults = {'entry_date':str(local_datetime_now()),}
+        self.defaults = {
+            'entry_date':str(local_datetime_now()),
+            'entry_UTC_date':datetime.utcnow(),
+        }
         
     def create_table(self):
         """Define and create a table"""
@@ -20,19 +26,19 @@ class LogEntry(SqliteTable):
             'location_name' TEXT,
             'entry_type' TEXT,
             'entry_date' DATETIME,
+            'entry_UTC_date' DATETIME,
             'memo' TEXT,
             'longitude' REAL,
             'latitude' REAL,
             'odometer' INT,
             'projected_range' INT,
-            'fuel_qty' REAL,
+            'fuel_qty' INT,
             'charging_rate' INT,
             'fuel_cost' REAL,
-            'trip_id' INT,
-            FOREIGN KEY (trip_id) REFERENCES trip(id) ON DELETE CASCADE
+            'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
             """
         super().create_table(sql)
-        
+
         
     @property
     def _column_list(self):
@@ -45,6 +51,38 @@ class LogEntry(SqliteTable):
         
         return column_list
     
+    def update(self, rec, form, save=False) -> None:
+        """
+        Update the record with the contents of the form
+
+        In the case of the LogEntry table we need to update the entry_UTC_date
+        filed to it's equivelent at UTC so that we can order the entryies
+        in the same order they actually occured regardless of the time zone
+        at the time of entry.
+
+        Arguments:
+            rec -- A DataRow object
+            form -- The request.form object
+
+        Keyword Arguments:
+            save -- If True, save the record after validating the input (default: {False})
+
+        Returns:
+            None
+        """
+        # import pdb;pdb.set_trace()
+        old = self.get(rec.id)
+        if old:
+            form_entry_date = getDatetimeFromString(form.get('entry_date'))
+            # Did the entry_date change?
+            if form_entry_date != getDatetimeFromString(old.entry_date):
+                # set entry_UTC_date to the UTC equivelent for the entry_date
+                rec.entry_UTC_date = form_entry_date.astimezone(pytz.utc)
+        else:
+            rec.entry_UTC_date = datetime.utcnow()
+
+        return super().update(rec, form, save)
+    
 
 class Trip(SqliteTable):
     """Handle some basic interactions this table"""
@@ -55,7 +93,10 @@ class Trip(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'lower(name)'
-        self.defaults = {'creation_date':local_datetime_now()}
+        self.defaults = {
+                'creation_date':local_datetime_now(),
+                'current_trip_date':datetime.utcnow(),
+                }
         
     def create_table(self):
         """Define and create a table"""
@@ -63,6 +104,7 @@ class Trip(SqliteTable):
         sql = """
             'name' TEXT,
             'creation_date' DATETIME NOT NULL,
+            'current_trip_date' DATETIME NOT NULL,
             'vehicle_id' INT,
              FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON DELETE CASCADE
             """
@@ -79,6 +121,22 @@ class Trip(SqliteTable):
         ]
         
         return column_list
+    
+    def save(self, rec, **kwargs) -> None:
+        """
+        Special handling for the Trip record
+
+        Set the current_trip_date field to the current UTC datetime 
+        prior to save.
+
+        Arguments:
+            rec -- DataRow record
+
+        Returns:
+            None
+        """
+        rec.current_trip_date = datetime.utcnow()
+        return super().save(rec, **kwargs)
     
 
 class Vehicle(SqliteTable):
@@ -156,6 +214,40 @@ class TripPhoto(SqliteTable):
         
         return column_list
 
+def create_triggers(db) -> None:
+    """
+    Create any triggers needed.
+
+    May referenc any tables in the database
+
+    Arguments:
+        db -- The Sqlite database connection object
+    """
+    
+    # Update the trip date when the log_entry changes
+    db.execute("""
+            CREATE TRIGGER IF NOT EXISTS update_trip_mod_date UPDATE ON log_entry 
+            BEGIN
+                UPDATE trip SET current_trip_date = datetime('now') WHERE trip.id = new.trip_id;
+            END
+    """)
+    db.execute("""
+            CREATE TRIGGER IF NOT EXISTS insert_trip_mod_date INSERT ON log_entry 
+            BEGIN
+                UPDATE trip SET current_trip_date = datetime('now') WHERE trip.id = new.trip_id;
+            END
+    """)
+
+    # Could not get this trigger to work because apparently you can't update in a trigger on the
+    # same record you are updating... which makes a lot of sense.
+    # # Update the UTC date on entry log to coinside with the event date
+    # db.execute("""
+    #         CREATE TRIGGER IF NOT EXISTS update_log_entry_UTC_date UPDATE ON log_entry 
+    #         BEGIN
+    #             UPDATE log_entry SET entry_UTC_date = datetime(entry_date,'utc') WHERE log_entry.id = new.id;
+    #         END
+    # """)
+
 
 def init_db(db):
     """Create Tables."""
@@ -166,3 +258,5 @@ def init_db(db):
             o != SqliteTable:
     
             o(db).init_table()
+
+    create_triggers(db)

@@ -50,6 +50,7 @@ def edit(rec_id=None):
     view.edit_fields = get_edit_field_list()
 
     if request.form and view.success:
+        import pdb;pdb.set_trace()
         # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:

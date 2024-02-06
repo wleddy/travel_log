@@ -7,6 +7,7 @@ from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
 
 import travel_log.models as models
+from travel_log.views.travel_log import get_current_trip_id
 
 PRIMARY_TABLE = models.LogEntry
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
@@ -73,6 +74,10 @@ def edit(rec_id=None):
 
     if is_mobile_device():
         view.use_anytime_date_picker = False
+
+    # Set the trip id for new records
+    if not view.rec.trip_id:
+        view.rec.trip_id = get_current_trip_id()
 
     view.edit_fields = get_edit_field_list(rec)
     if view.edit_fields is None:
