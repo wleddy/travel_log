@@ -81,13 +81,14 @@ def home():
                 for x in range(len(data['log_entries'])):
                     rec = data['log_entries'][x]
                     # import pdb;pdb.set_trace()
-                    if rec['odometer']:
-                        if odometer_start is None:
-                            odometer_start = rec['odometer']
-                            data['log_entries'][x]['distance'] = 0
-                            continue
-                        if rec['odometer'] and rec['odometer'] > odometer_start:
-                            data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
+                    if not rec['odometer'] and odometer_start is None:
+                        if not rec['odometer']:
+                            rec['odometer'] = 0
+                        odometer_start = rec['odometer']
+                        data['log_entries'][x]['distance'] = 0
+                        continue
+                    if rec['odometer'] and rec['odometer'] > odometer_start:
+                        data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
 
 
     return render_template('travel_log/home.html',data=data)

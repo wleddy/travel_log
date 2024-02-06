@@ -96,13 +96,14 @@
         {% if data.trip %}
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
+            <p><strong>Your Ride: </strong>{{ data.vehicle | default('??',True)}}</p>
             {% if data.log_entries %}
             {% for rec in data.log_entries %}
             <div id="home-trip-list" >
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
                     <div class="w3-row w3-row-padding" >
                         <h4 class="w3-col  m8 l8 s8" ><strong>Where:</strong> {{rec.location_name}}</h4>
-                        <h4 class="w3-col  m4 l4 s4" ><strong class="w3-hide-small" >When:</strong> {{ rec.entry_date | local_time_string}}</h4>
+                        <h4 class="w3-col  m4 l4 s4" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</h4>
                     </div>
                     <div class="w3-row w3-row-padding" >
                         <p class="w3-col m8 l8 s8"><strong>Log Type:</strong> {{ rec.entry_type}}</p>
