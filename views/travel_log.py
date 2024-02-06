@@ -67,7 +67,11 @@ def home():
         data['log_entries'] = None
         if data['trip']:
             sql = f"""
-                select id, location_name, odometer, entry_date, entry_type, memo, null as distance from log_entry where trip_id = {trip_id}
+                select log_entry.id, location_name, odometer, entry_date, entry_type, memo, null as distance 
+                from log_entry 
+                join trip on log_entry.trip_id = trip.id
+                where trip_id = {trip_id}
+                and trip.vehicle_id in (select id from vehicle where user_id = {session.get('user_id')})
                 order by entry_date
             """
             recs = models.LogEntry(g.db).query(sql)
