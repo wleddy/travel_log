@@ -119,10 +119,17 @@ def validate_form(view):
         flash('The Charging Rate must be a positive number.')
         view.success = False
 
+    if cleanRecordID(view.rec.odometer) < 0:
+        flash('The Odometer reading must be a positive number.')
+        view.success = False
+
     try:
         view.rec.fuel_cost = float(view.rec.fuel_cost)
+        if view.rec.fuel_cost < 0:
+            flash('The Fuel Cost must be a positive number or zero.')
+            view.success = False
     except:
-        flash('The Fuel Cost must be a positive number.')
+        flash('The Fuel Cost must be a number or zero')
         view.success = False
 
     if isinstance(view.rec.fuel_qty,str):
