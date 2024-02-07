@@ -213,8 +213,9 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         select max(log_entry.odometer) as odometer from log_entry
         join trip on trip.id = log_entry.trip_id
         join vehicle on vehicle.id = trip.vehicle_id
-        where vehicle.id = trip.vehicle_id and trip.id = {get_current_trip_id()}
+        where vehicle.id = (select vehicle_id from trip where trip.id = {get_current_trip_id()})
     """
+		
     # import pdb;pdb.set_trace()
     prev_odometer= models.LogEntry(g.db).query_one(sql)
     if prev_odometer:
