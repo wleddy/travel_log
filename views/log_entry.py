@@ -209,13 +209,11 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     options = []
     user = User(g.db).get(session.get('user'))
     
-    sql=f"""
-        select max(log_entry.odometer) as odometer from log_entry
-        join trip on trip.id = log_entry.trip_id
-        join vehicle on vehicle.id = trip.vehicle_id
-        where vehicle.id = (select vehicle_id from trip where trip.id = {get_current_trip_id()})
+    sql = f"""
+        select max(cast(log_entry.odometer as integer)) as odometer from trip
+        join log_entry on log_entry.trip_id = trip.id
+        where odometer is not null and trip.vehicle_id = (select vehicle_id from trip where trip.id = {get_current_trip_id()}) 
     """
-		
     # import pdb;pdb.set_trace()
     prev_odometer= models.LogEntry(g.db).query_one(sql)
     if prev_odometer:
