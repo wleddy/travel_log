@@ -63,8 +63,9 @@
         display:none;
     }
     #new_trip_button {
-        position:relative;
+        position:absolute;
         top:-50pt;
+				text-align: right;
     }
     #trip_list_top_space {
         height:45pt;
@@ -91,12 +92,11 @@
         
     </div>
 {% else %}
-    <p id="trip_list_top_space" class="w3-hide-small w3-hide-medium" >&nbsp</p>
+    <p id="trip_list_top_space" class="w3-hide-small w3-hide-medium" >&nbsp;</p>
     <div id="trip-list-contain" >
         <div id="new_trip_button" >
-            <p><a class="w3-btn w3-circle w3-xlarge w3-right w3-secondary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
+            <p><a class="w3-btn w3-circle w3-xlarge w3-secondary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
         </div>
-        <h2  class="w3-primary-color" >Your Current Trip</h2>
         {% if data.trip %}
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
