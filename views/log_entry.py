@@ -208,9 +208,17 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     edit_fields = []
     options = []
     user = User(g.db).get(session.get('user'))
-    prev_odometer = 0
-    if log_entry_rec.trip_id:
-        prev_odometer = models.LogEntry(g.db).select_one(where = f'trip_id = {log_entry_rec.trip_id}', order_by = 'odometer DESC')
+    
+    sql=f"""
+        select max(log_entry.odometer) as odometer from log_entry
+        join trip on trip.id = log_entry.trip_id
+        join vehicle on vehicle.id = trip.vehicle_id
+        where vehicle.id = trip.vehicle_id and trip.id = {get_current_trip_id()}
+    """
+    # import pdb;pdb.set_trace()
+    prev_odometer= models.LogEntry(g.db).query_one(sql)
+    if prev_odometer:
+        prev_odometer = prev_odometer.odometer
     if not prev_odometer:
         prev_odometer = 0
 
@@ -260,10 +268,8 @@ def get_edit_field_list(log_entry_rec) -> list | None:
 
     edit_fields.extend(
         [
-        {'name':'memo','type':'textarea',},
-        {'name':'longitude','type':'text'},
-        {'name':'latitude','type':'text'},
         {'name':'odometer','type':'number','default':prev_odometer},
+        {'name':'memo','type':'textarea',},
         {'name':'projected_range','type':'number','default':0},
         {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0},
         {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)'},
