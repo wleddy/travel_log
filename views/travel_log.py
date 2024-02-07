@@ -52,7 +52,7 @@ def home():
     if'user_id' in session:
 
         # create a vehicle record if none exists
-        if not models.Vehicle(g.db).select():
+        if not models.Vehicle(g.db).select(where=f"user_id = {session.get('user_id')}"):
             rec = models.Vehicle(g.db).new()
             rec.name = "My Car"
             rec.fuel_type = "Electric"
@@ -83,13 +83,12 @@ def home():
                 for x in range(len(data['log_entries'])):
                     rec = data['log_entries'][x]
                     # import pdb;pdb.set_trace()
-                    if not rec['odometer'] and odometer_start is None:
-                        if not rec['odometer']:
-                            rec['odometer'] = 0
+                    data['log_entries'][x]['distance'] = 0
+                    if rec['odometer'] and odometer_start is None:
                         odometer_start = rec['odometer']
-                        data['log_entries'][x]['distance'] = 0
-                        continue
-                    if rec['odometer'] and rec['odometer'] > odometer_start:
+                    if not rec['odometer']:
+                        rec['odometer'] = 0 
+                    elif odometer_start is not None and rec['odometer'] and rec['odometer'] > odometer_start:
                         data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
 
 
@@ -220,8 +219,11 @@ def trip_list(path=''):
     view.list_fields = tl_views.trip.get_listing_field_list()
     view.base_layout = 'travel_log/layout.html'
     view.use_anytime_date_picker = not is_mobile_device()
-
     # import pdb;pdb.set_trace()
+    view.sql = f"""
+        select * from trip
+        where vehicle_id in (select id from vehicle where user_id = {session.get('user_id'),-1})
+    """
 
     if view.next  and 'delete' not in path:
         return redirect(view.next) # was called from somewhere else
@@ -335,7 +337,9 @@ def car_list(path=''):
     # view.list_fields = [
     #     ]
     view.base_layout = 'travel_log/layout.html'
-
+    view.sql = f"""
+        select * from vehicle where user_id = {session.get('user_id',-1)}
+    """
     if view.next  and 'delete' not in path:
         return redirect(view.next) # was called from somewhere else
     
@@ -416,12 +420,9 @@ def get_current_trip_id() -> int:
     trip_id = None
 
     # Get the most recently edited trip or log_entry
-    rec = models.Trip(g.db).select_one(order_by="current_trip_date DESC")
+    rec = models.Trip(g.db).select_one(where=f"trip.vehicle_id in (select id from vehicle where user_id = {session.get('user_id')})",order_by="current_trip_date DESC")
     if rec:
         trip_id = rec.id
-
-    if trip_id:
-        session['current_trip_id'] = trip_id
 
     return trip_id
 
@@ -446,11 +447,12 @@ def create_menus():
             {'title':'Add a Log Entry','url':url_for('.add_log'),},
             {'title':'Edit this Trip','url':url_for('.edit_current_trip'),},
             {'title':'Select a Trip','url':url_for('.select_trip'),},
-            {'title':'Add a new Trip','url':url_for('.add_trip'),},
+            {'title':'Start a new Trip','url':url_for('.add_trip'),},
             ]
         })
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
-        g.menu_items.append({'title':'Account','url':url_for('.account')})
+        if session.get('user_has_password'):
+            g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
         
         
