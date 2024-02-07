@@ -67,8 +67,8 @@ def home():
         data['log_entries'] = None
         if data['trip']:
             sql = f"""
-                select log_entry.id, location_name, odometer, entry_date, entry_type, memo, null as distance,
-                vehicle.name as vehicle 
+                select log_entry.id, location_name, odometer, entry_date, entry_type, 
+                memo, 0 as trip_distance, 0 as leg_distance, vehicle.name as vehicle 
                 from log_entry 
                 join trip on log_entry.trip_id = trip.id
                 join vehicle on trip.vehicle_id = vehicle.id
@@ -79,18 +79,23 @@ def home():
             recs = models.LogEntry(g.db).query(sql)
             if recs:
                 data['log_entries'] = [ rec.asdict() for rec in recs]
-                odometer_start = None
+                trip_start = 0
+                prev_leg_start = 0
+                # import pdb;pdb.set_trace()
                 for x in range(len(data['log_entries'])):
                     rec = data['log_entries'][x]
-                    # import pdb;pdb.set_trace()
-                    data['log_entries'][x]['distance'] = 0
+                    print('prev leg start',prev_leg_start)
                     if not rec['odometer']: # may be none or empty string
                         rec['odometer'] = 0 
-                    if odometer_start is None:
-                        odometer_start = rec['odometer']
-                    if rec['odometer'] >= odometer_start:
-                        data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
-
+                    if not trip_start:
+                        trip_start = rec['odometer']
+                    if rec['odometer'] > trip_start:
+                        data['log_entries'][x]['trip_distance'] = rec['odometer'] - trip_start
+                    if not prev_leg_start:
+                        prev_leg_start = rec['odometer']
+                    if rec['odometer'] - prev_leg_start > 0:
+                        data['log_entries'][x]['leg_distance'] = rec['odometer'] - prev_leg_start
+                        prev_leg_start = rec['odometer']
 
     return render_template('travel_log/home.html',data=data)
 

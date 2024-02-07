@@ -31,7 +31,7 @@
    #trip-list-contain p {
          margin:0;
     }
-    #trip-list-contain h4 {
+    #log_title_row h4, #log_title_row p {
         margin:3pt 0 0 0;
         border-top: black 2pt solid;
     }
@@ -48,7 +48,8 @@
         font-weight: bold;
     }
     .memo {
-        margin: 0 0 0 10pt;
+        margin: 2pt 0 0 10pt;
+        background-color:lightcyan;
     }
     .no_log, .no_trip {
         margin-top:6pt !important;
@@ -65,6 +66,12 @@
         position:relative;
         top:-10pt;
 		text-align: right;
+    }
+    #trip_stats_left {
+        float:left;
+    }
+    #trip_stats_right {
+        text-align: right;
     }
 
 </style>
@@ -88,7 +95,7 @@
         
     </div>
 {% else %}
-    <div id="trip-list-contain" >
+    <div id="trip-list-contain " >
         <div id="new_trip_button" >
             <p><a class="w3-btn w3-circle w3-xlarge w3-primary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
         </div>
@@ -96,18 +103,24 @@
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
             {% if data.log_entries %}
-            <p><strong>Your Ride: </strong>{{ data.log_entries[0].vehicle | default('??',True)}}</p>
-            {% for rec in data.log_entries %}
+            {% set log_len = data.log_entries | length %}
+            <div id="trip_stats_left" >
+                <p><strong>Your Ride: </strong>{{ data.log_entries[0].vehicle | default('??',True)}}</p>
+            </div>
+            <div id="trip_stats_right" >
+                <p><strong>Total Distance: </strong>{{ data.log_entries[log_len-1].trip_distance | default('0',True)}} mi.</p>
+            </div>
+        {% for rec in data.log_entries %}
             <div id="home-trip-list" >
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
-                    <div class="w3-row w3-row-padding" >
+                    <div id="log_title_row" class="w3-row w3-row-padding" >
                         <h4 class="w3-col  m8 l8 s8" ><strong>Where:</strong> {{rec.location_name}}</h4>
-                        <h4 class="w3-col  m4 l4 s4" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</h4>
+                        <p class="w3-col  m4 l4 s4" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</d>
                     </div>
                     <div class="w3-row w3-row-padding" >
                         <p class="w3-col m8 l8 s8"><strong>Log Type:</strong> {{ rec.entry_type}}</p>
-                        {% if rec.distance != None %}
-                        <p class="w3-col m4 l4 s4"><strong>Dist.:</strong> {{ rec.distance }}mi.</p>
+                        {% if rec.leg_distance != None %}
+                        <p class="w3-col m4 l4 s4"><strong>Leg:</strong> {{ rec.leg_distance }}mi.</p>
                         {% endif %}
                     </div>
                 </div>
