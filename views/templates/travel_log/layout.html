@@ -17,7 +17,8 @@
 	<script src="{{ url_for('static', filename='layout.js') }}"></script>
     {% set as_bar = site_config.MENU_AS_BAR | default(False) %}
     <script>
-        set_menu_type({{ as_bar | lower }});
+        // set_menu_type({{ as_bar | lower }});
+        set_menu_type(true);
     </script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='w3.css' )}}">
@@ -44,7 +45,7 @@
             {% include "travel_log/top-nav.html"%}
         {% endblock header %}
         </div>
-        <div id="sg-content" class="w3-main w3-container menu_space">
+        <div id="sg-content" class="w3-main w3-container ">
             <div id="sg-page-header">
             {% block page_header %}
                 {% if not g.suppress_page_header %}
@@ -52,7 +53,7 @@
                 {% endif %}
             {% endblock page_header %}
         </div>        
-        <div id="sg-content" class="w3-main w3-container menu_space">            
+        <div id="sg-content" class="w3-main w3-container ">            
             <div id="sg-flasher">
                 {% block flasher %}{% include "travel_log/flasher.html" %}{% endblock flasher%}
             </div>
