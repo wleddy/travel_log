@@ -84,11 +84,11 @@ def home():
                     rec = data['log_entries'][x]
                     # import pdb;pdb.set_trace()
                     data['log_entries'][x]['distance'] = 0
-                    if rec['odometer'] and odometer_start is None:
-                        odometer_start = rec['odometer']
-                    if not rec['odometer']:
+                    if not rec['odometer']: # may be none or empty string
                         rec['odometer'] = 0 
-                    elif odometer_start is not None and rec['odometer'] and rec['odometer'] > odometer_start:
+                    if odometer_start is None:
+                        odometer_start = rec['odometer']
+                    if rec['odometer'] >= odometer_start:
                         data['log_entries'][x]['distance'] = rec['odometer'] - odometer_start
 
 
