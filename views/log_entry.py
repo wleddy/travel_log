@@ -246,12 +246,12 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     
     edit_fields.extend(
         [
-        {'name':'location_name','req':True,},
-        {'name':'entry_type','req':True,'type':'select','options':[
+        {'name':'entry_type','type':'select','options':[
             {'name':'Departure'},
             {'name':'Point of Interest'},
             {'name':'Arrival'},
         ]},
+        {'name':'location_name','req':True,},
         ]
     )    
  
