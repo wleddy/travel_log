@@ -274,7 +274,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
 
     edit_fields.extend(
         [
-        {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer},
+        {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad',},
         {'name':'memo','type':'textarea',},
         {'name':'projected_range','type':'number','default':0},
         {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0},
