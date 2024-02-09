@@ -196,7 +196,7 @@ def edit_log(rec_id=None):
     trip = models.Trip(g.db).get(view.rec.trip_id)
     if trip and view.edit_fields[0]['name'] == 'trip_id':
         view.edit_fields[0]['type'] = 'hidden'
-        view.edit_fields.insert(0,{'name':'header','type':'raw','value':f'<h4 class="w3-secondary-color w3-center w3-bar">{trip.name}</h4><hr/>'})
+        view.edit_fields.insert(0,{'name':'header','raw':True,'content':f'<h4 class="w3-secondary-color w3-center w3-bar">{trip.name}</h4><hr/>'})
 
     view.validate_form = tl_views.log_entry.validate_form
     view.base_layout = "travel_log/form_layout.html"
