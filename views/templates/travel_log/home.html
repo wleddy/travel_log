@@ -3,7 +3,7 @@
 {% block head %}
 {{ super() }}
 <style>
-    h2, h3{
+    #log-body-contain h2, #log-body-contain h3{
         text-align: center;
     }
 
@@ -26,7 +26,7 @@
     #log-body-contain {
         width:90%;
         max-width:500pt;
-        margin:20pt auto 10pt auto;
+        margin: auto;
     }
    #trip-list-contain p {
          margin:0;
@@ -97,6 +97,7 @@
 {% else %}
     <div id="trip-list-contain " >
         <div id="new_trip_button" >
+            <p class="w3-hide-medium w3-hide-small " style="height:20pt;">&nbsp;</p>
             <p><a class="w3-btn w3-circle w3-xlarge w3-primary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
         </div>
         {% if data.trip %}
