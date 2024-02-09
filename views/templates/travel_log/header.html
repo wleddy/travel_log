@@ -1,22 +1,27 @@
 <div id="sg-identity" class="w3-container w3-main " style="padding:2%;">
-    <div class="w3-hide-small" style="max-width:120pt;">
+    <div class="w3-hide-small w3-hide-medium" >
         <a id="header_home" href="{{ url_for('travel_log.home') }}">
               <img 
               id="headerlogo" src="{{ url_for('static', filename='travel_log/images/header-logo.png') }}" 
               alt="Header image for Travel Log" >
         </a>
+        <div class="site-header-name ">
+            <h1 class="w3-xxxlarge" class="w3-xxxlarge" style="line-height:.9;margin-right:24pt;" ><a style="text-decoration:none;" href="{{ url_for('travel_log.home')}}">Travel Log</a></h1>
+        </div>
     </div>
-    <div class="w3-hide-medium w3-hide-large" style="max-width:120pt;">
-        <a id="small_header_home" href="{{ url_for('travel_log.home') }}">
-              <img 
-              id="headerlogo-small" src="{{ url_for('static', filename='travel_log/images/header-logo.png') }}" 
-              alt="Header image for Travel Log" >
-        </a>
+    <div class="w3-hide-large w3-row">
+        <p class="w3-col s4">
+            <a id="small_header_home" href="{{ url_for('travel_log.home') }}">
+                <img 
+                id="headerlogo-small" src="{{ url_for('static', filename='travel_log/images/header-small-logo.png') }}" 
+                alt="Header image for Travel Log" >
+            </a>
+        </p>
+        <div class="site-small-header-name w3-col s6 ">
+            <h1><a style="text-decoration:none;" href="{{ url_for('travel_log.home')}}">Travel Log</a></h1>
+        </div>
     </div>
 
-    <div class="site-header-name ">
-        <h1 class="w3-xxxlarge" class="w3-xxxlarge" style="line-height:.9;margin-right:24pt;" ><a style="text-decoration:none;" href="{{ url_for('travel_log.home')}}">Travel Log</a></h1>
-    </div>
 </div>
 
 
