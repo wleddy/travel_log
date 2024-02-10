@@ -128,7 +128,7 @@ def new_account():
 @login_required
 def log_list(path=''):
     setExits('log')
-    g.title = f"{plural(models.LogEntry.TABLE_IDENTITY,2)} Record List"
+    g.title = f"{PRIMARY_TABLE(g.db).display_name} Record List"
 
     view = TableView(models.LogEntry,g.db)
     # optionally specify the list fields

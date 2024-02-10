@@ -17,7 +17,7 @@ def setExits():
     g.listURL = url_for('.display')
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
-    g.title = f'{plural(PRIMARY_TABLE(g.db).display_name,2)}'
+    g.title = f'{PRIMARY_TABLE(g.db).display_name}'
     
 
 # this handles table list and record delete
@@ -83,7 +83,7 @@ def get_edit_field_list() ->list:
     for rec in recs:
         options.append({'name':rec.name,'value':rec.name})
     edit_fields.append({'name':'fuel_type','type':'select', 'options': options,})
-    edit_fields.append({'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh, Gal. or Hours'})
+    edit_fields.append({'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh, Gal. or Hours','class':'keypad_input'})
     
     user_options = []
     users = User(g.db).select()
