@@ -278,9 +278,9 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {'name':'memo','type':'textarea',},
         {'name':'projected_range','type':'number','default':0,'class':'keypad_input',},
         {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0,'class':'keypad_input',},
+        {'name':'fueling_time','type':'text','label':'Fueling Time (minutes)','default':'0','class':'keypad_input',},
         {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)','class':'keypad_input',},
         {'name':'fuel_cost','type':'text','default':'0','class':'keypad_input',},
-        {'name':'fueling_time','type':'text','label':'Fueling Time (minutes)','default':'0','class':'keypad_input',},
         ]
     )
     
