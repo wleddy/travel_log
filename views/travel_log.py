@@ -40,6 +40,37 @@ def setExits(which=''):
         
     create_menus()
 
+def compile_trip_summary(recs,data) ->None:
+    """
+    Compile summary data for a trip
+
+    Walk the list of recs and store summary data in data['log_entries']
+
+    Arguments:
+        recs -- A list of LogEntry records with some additional columns
+        data -- A dict
+    """
+
+    if recs:
+        data['log_entries'] = [ rec.asdict() for rec in recs]
+        trip_start = 0
+        prev_leg_start = 0
+        # import pdb;pdb.set_trace()
+        for x in range(len(data['log_entries'])):
+            rec = data['log_entries'][x]
+            print('prev leg start',prev_leg_start)
+            if not rec['odometer']: # may be none or empty string
+                rec['odometer'] = 0 
+            if not trip_start:
+                trip_start = rec['odometer']
+            if rec['odometer'] > trip_start:
+                data['log_entries'][x]['trip_distance'] = rec['odometer'] - trip_start
+            if not prev_leg_start:
+                prev_leg_start = rec['odometer']
+            if rec['odometer'] - prev_leg_start > 0:
+                data['log_entries'][x]['leg_distance'] = rec['odometer'] - prev_leg_start
+                prev_leg_start = rec['odometer']
+
 
 @mod.route('/<path:path>>',methods=['GET',])
 @mod.route('/',methods=['GET',])
@@ -58,11 +89,12 @@ def home():
         trip_id = get_current_trip_id()
         data['trip'] = models.Trip(g.db).get(trip_id)
         # get logs of the most recent trips if any
-        data['log_entries'] = None
         if data['trip']:
             sql = f"""
                 select log_entry.id, location_name, odometer, entry_date, entry_type, 
-                memo, 0 as trip_distance, 0 as leg_distance, vehicle.name as vehicle 
+                memo, fuel_qty, charging_rate, fuel_cost, fueling_time,
+                0 as trip_distance, 0 as leg_distance, vehicle.name as vehicle,
+                vehicle.fuel_capacity as fuel_capacity 
                 from log_entry 
                 join trip on log_entry.trip_id = trip.id
                 join vehicle on trip.vehicle_id = vehicle.id
@@ -71,25 +103,10 @@ def home():
                 order by entry_date
             """
             recs = models.LogEntry(g.db).query(sql)
-            if recs:
-                data['log_entries'] = [ rec.asdict() for rec in recs]
-                trip_start = 0
-                prev_leg_start = 0
-                # import pdb;pdb.set_trace()
-                for x in range(len(data['log_entries'])):
-                    rec = data['log_entries'][x]
-                    print('prev leg start',prev_leg_start)
-                    if not rec['odometer']: # may be none or empty string
-                        rec['odometer'] = 0 
-                    if not trip_start:
-                        trip_start = rec['odometer']
-                    if rec['odometer'] > trip_start:
-                        data['log_entries'][x]['trip_distance'] = rec['odometer'] - trip_start
-                    if not prev_leg_start:
-                        prev_leg_start = rec['odometer']
-                    if rec['odometer'] - prev_leg_start > 0:
-                        data['log_entries'][x]['leg_distance'] = rec['odometer'] - prev_leg_start
-                        prev_leg_start = rec['odometer']
+
+            data['log_entries'] = None
+            compile_trip_summary(recs,data)
+            
 
     return render_template('travel_log/home.html',data=data)
 

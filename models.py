@@ -46,7 +46,7 @@ class LogEntry(SqliteTable):
         """
     
         column_list = [
-        
+         {'name':'fueling_time','definition':'TEXT'},
         ]
         
         return column_list
