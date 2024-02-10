@@ -52,13 +52,7 @@ def home():
     if'user_id' in session:
 
         # create a vehicle record if none exists
-        if not models.Vehicle(g.db).select(where=f"user_id = {session.get('user_id')}"):
-            rec = models.Vehicle(g.db).new()
-            rec.name = "My Car"
-            rec.fuel_type = "Electric"
-            rec.fuel_capacity = 62
-            rec.user_id = session.get('user_id')
-            models.Vehicle(g.db).save(rec,commit=True)
+        make_default_vehicle(session.get('user_id'))
 
         # select the most recent trip record or at least the one the user wants
         trip_id = get_current_trip_id()
@@ -114,6 +108,23 @@ def login():
     
     return redirect(url_for('login.login') + f'?next={url_for(".home")}')
 
+def make_default_vehicle(user_id) ->None:
+    """
+    Create a default vehicle probably for a new user
+
+    Arguments:
+        user_id -- user.id
+    """
+ 
+    if not models.Vehicle(g.db).select(where=f"user_id = {user_id}"):
+        rec = models.Vehicle(g.db).new()
+        rec.name = "My Car"
+        rec.fuel_type = "Electric"
+        rec.fuel_capacity = 62
+        rec.user_id = session.get('user_id')
+        models.Vehicle(g.db).save(rec,commit=True)
+
+
 @mod.route('new_account/',methods=['GET',])
 def new_account():
     """ log a user out """
@@ -128,7 +139,7 @@ def new_account():
 @login_required
 def log_list(path=''):
     setExits('log')
-    g.title = f"{PRIMARY_TABLE(g.db).display_name} Record List"
+    g.title = f"{models.LogEntry(g.db).display_name} Record List"
 
     view = TableView(models.LogEntry,g.db)
     # optionally specify the list fields
