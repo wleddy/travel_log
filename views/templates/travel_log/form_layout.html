@@ -40,7 +40,7 @@
             <p>
                 <button class="keypad_button keypad_zero w3-button w3-round-xlarge w3-xlarge  w3-primary-color" onclick="keypad_value(this)">0</button>
                 <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">.</button>
-                <button class="keypad_button keypad_right_button w3-circle w3-xlarge  w3-cancel-button-color" onclick="keypad_cancel()">&times;</button>
+                <button class="keypad_button w3-button keypad_right_button w3-circle w3-xlarge  w3-cancel-button-color" onclick="keypad_cancel()">&times;</button>
             </p>
         </div>
         <p id="button_row" class="w3-align-right">
@@ -60,7 +60,7 @@
     })
 </script>
 {% endif %} <!-- data.table_name == trip -->
-{% if data.is_mobile_device %}
+{% if data.is_mobile_device or True %}
 <style>
     #keypad_window {
         display:none;
@@ -97,7 +97,8 @@
 </style>
 <script>
     $().ready(function(){
-        $('.keypad').focus(open_keypad);
+        $('.keypad').css('touch-action','none').prop('readonly','readonly').focus(open_keypad);
+
     })
 
     function open_keypad(){
