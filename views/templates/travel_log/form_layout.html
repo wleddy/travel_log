@@ -13,134 +13,18 @@
     </form>
 </div>
 
-<div id="keypad_window" class="w3-modal">
-    <div class="w3-modal-content w3-card-4" >
-        <p id="keypad_header">Header</p>
-        <p id="keypad_value" class="w3-right-align"></p>
-        <div id="the_pad" >
-            <p>
-            <button class="keypad_button w3-button w3-circle w3-xlarge  w3-delete-button-color" onclick="keypad_clear()">C</button>
-            </p>
-            <p>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">7</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">8</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">9</button>
-                <button class="keypad_button w3-button keypad_right_button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_backspace()">&larr;</button>
-            </p>
-            <p>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">6</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">5</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">4</button>
-                <button class="keypad_button w3-button keypad_right_button w3-circle w3-xlarge  w3-save-button-color" onclick="keypad_done()">&check;</button>
-            </p>
-            <p>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">3</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">2</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">1</button>
-            </p>
-            <p>
-                <button class="keypad_button keypad_zero w3-button w3-round-xlarge w3-xlarge  w3-primary-color" onclick="keypad_value(this)">0</button>
-                <button class="keypad_button w3-button w3-circle w3-xlarge  w3-primary-color" onclick="keypad_value(this)">.</button>
-                <button class="keypad_button w3-button keypad_right_button w3-circle w3-xlarge  w3-cancel-button-color" onclick="keypad_cancel()">&times;</button>
-            </p>
-        </div>
-        <p id="button_row" class="w3-align-right">
-        </p> 
-        <p id="input_id" style="display:none;">something</p>
-    </div>
-</div>
+{% if data and data.is_mobile_device %}
+{% include "keypad.html" %}
+{% endif %}
 
-{% endblock body %}
+{% endblock %}
 
 {% block head %}
 {{ super() }}
-{% if data and data.table.table_name == 'log_entry' and data.rec.get('id') %}
-<script>
-    $().ready(function(){
-        $('select#trip_id').prop('disabled','disabled');
-    })
-</script>
-{% endif %} <!-- data.table_name == trip -->
-{% if data.is_mobile_device %}
-<style>
-    #keypad_window {
-        display:none;
-    }
-    #keypad_window div:first-child {
-        max-width:225pt;
-        margin:auto;
-        padding:6pt;
-        border-width: 6pt;
-        border-style: solid;
-        border-radius:16pt;
-        border-color:gainsboro;
-    }
-    #keypad_value {
-        height:50pt;
-        border: 2pt black inset;
-        padding: 2pt;
-        margin:6pt 30pt;
-        font-weight:bold;
-        font-size:28pt;
-        background-color:#ccc;
-        color:forestgreen;
-    }
-    .keypad_button, .keypad_zero {
-        width: 40pt;
-        margin: 3pt 4pt;
-        touch-action:none;
-    }
-    .keypad_zero {
-        width: 90pt
-    }
-    .keypad_right_button {
-        margin-right:0;
-    }
-    #keypad_header {
-        text-align: center;
-        font-size: 16pt;
-        font-weight:bold;
-    }
-</style>
-<script>
-    $().ready(function(){
-        $('.keypad_input').css('touch-action','none').prop('readonly','readonly').focus(open_keypad);
 
-    })
-
-    function open_keypad(){
-        value = this.value;
-        $('#keypad_window #keypad_value').text(value);
-        input_id = this.id;
-        $('#keypad_window #input_id').text(input_id)
-        label = $("#" + input_id ).attr('label')
-        $('#keypad_window #keypad_header').text(label)
-        $('#keypad_window').show();
-    }
-    function keypad_done() {
-        value = $('#keypad_window #keypad_value').text();
-        target_id = $('#keypad_window #input_id').text();
-        $('#' + target_id).val((value));
-        $('#keypad_window').hide();
-    }   
-    
-    function keypad_cancel() {
-        $('#keypad_window').hide();
-    }
-    function keypad_clear() {
-        $('#keypad_window #keypad_value').text('');
-    }
-    function keypad_backspace() {
-        value = $('#keypad_window #keypad_value').text();
-        if (value.length > 0) {
-            value = value.substr(0,value.length-1);
-            $('#keypad_window #keypad_value').text(value);
-        }
-    }
-    function keypad_value(which) {
-        value = $('#keypad_window #keypad_value').text();
-        $('#keypad_window #keypad_value').text(value + which.textContent);
-    }
-</script>
+{% if data and data.is_mobile_device %}
+<script src="{{ url_for('static', filename='keypad.js') }}"></script>
 {% endif %}
+
 {% endblock head%}
+
