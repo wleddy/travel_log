@@ -15,6 +15,7 @@
 
 <div id="keypad_window" class="w3-modal">
     <div class="w3-modal-content w3-card-4" >
+        <p id="keypad_header">Header</p>
         <p id="keypad_value" class="w3-right-align"></p>
         <div id="the_pad" >
             <p>
@@ -60,7 +61,7 @@
     })
 </script>
 {% endif %} <!-- data.table_name == trip -->
-{% if data.is_mobile_device or True %}
+{% if data.is_mobile_device %}
 <style>
     #keypad_window {
         display:none;
@@ -95,10 +96,15 @@
     .keypad_right_button {
         margin-right:0;
     }
+    #keypad_header {
+        text-align: center;
+        font-size: 16pt;
+        font-weight:bold;
+    }
 </style>
 <script>
     $().ready(function(){
-        $('.keypad').css('touch-action','none').prop('readonly','readonly').focus(open_keypad);
+        $('.keypad_input').css('touch-action','none').prop('readonly','readonly').focus(open_keypad);
 
     })
 
@@ -107,6 +113,8 @@
         $('#keypad_window #keypad_value').text(value);
         input_id = this.id;
         $('#keypad_window #input_id').text(input_id)
+        label = $("#" + input_id ).attr('label')
+        $('#keypad_window #keypad_header').text(label)
         $('#keypad_window').show();
     }
     function keypad_done() {

@@ -274,12 +274,12 @@ def get_edit_field_list(log_entry_rec) -> list | None:
 
     edit_fields.extend(
         [
-        {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad',},
+        {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
         {'name':'memo','type':'textarea',},
-        {'name':'projected_range','type':'number','default':0},
-        {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0},
-        {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)'},
-        {'name':'fuel_cost','type':'text','default':'0.00'},
+        {'name':'projected_range','type':'number','default':0,'class':'keypad_input',},
+        {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0,'class':'keypad_input',},
+        {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)','class':'keypad_input',},
+        {'name':'fuel_cost','type':'text','default':'0.00','class':'keypad_input',},
         ]
     )
     
