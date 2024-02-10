@@ -109,13 +109,13 @@
                 <p><strong>Your Ride: </strong>{{ data.log_entries[0].vehicle | default('??',True)}}</p>
             </div>
             <div id="trip_stats_right" >
-                <p><strong>Total Distance: </strong>{{ data.log_entries[log_len-1].trip_distance | default('0',True)}} mi.</p>
+                <p><strong>Total: </strong>{{ data.log_entries[log_len-1].trip_distance | default('0',True)}} mi.</p>
             </div>
         {% for rec in data.log_entries %}
             <div id="home-trip-list" >
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
                     <div id="log_title_row" class="w3-row w3-row-padding" >
-                        <h4 class="w3-col  m8 l8 s8" ><strong>{{ rec.entry_type | truncate(3,True,'') }}</strong> {{rec.location_name}}</h4>
+                        <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
                         <p class="w3-col  m4 l4 s4" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</d>
                     </div>
                     <div class="w3-row w3-row-padding" >
