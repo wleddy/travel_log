@@ -139,13 +139,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
         prev_log = {
             'odometer':0,
             'last_fuel_odo':0,
+            'departure_fuel_level':0
         }
         if recs:        
             # import pdb;pdb.set_trace()
             # Start of trip values...
             prev_log['last_fuel_odo'] = recs[0].odometer 
             prev_log['odometer'] = recs[0].odometer 
-
+            prev_log['departure_fuel_level'] = recs[0].departure_fuel_level
             for rec in recs:
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = 0
@@ -156,12 +157,13 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 if log['departure_fuel_level'] > log['arrival_fuel_level'] or log['fuel_cost']>0:
                     log['leg_fuel_cost'] = log['fuel_cost']
                     log['leg_fueling_time'] = log['fueling_time']
-                    log['leg_fuel_consumed'] = log['departure_fuel_level'] - log['arrival_fuel_level']
+                    log['leg_fuel_consumed'] = prev_log['departure_fuel_level'] - log['arrival_fuel_level']
                     log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
                     log['leg_efficiency'] = 0
                     if log['leg_fuel_distance']:
                         log['leg_efficiency'] = log['leg_fuel_distance'] / (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])                    
                         prev_log['last_fuel_odo'] = log['odometer']
+                        prev_log['departure_fuel_level'] = log['departure_fuel_level']
 
                 prev_log['odometer'] = log['odometer']
 
