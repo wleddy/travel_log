@@ -108,12 +108,12 @@
             </div>
             <div class="w3-row" >
             {% if data.log_entries[0].trip_distance %}
-                <p class="w3-col m4 l4 s4"><strong>Leg:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
+                <p class="w3-col m4 l4 s6"><strong>Leg:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
             {% endif %}
             {% if data.log_entries[0].trip_efficiency %}
-                <p class="w3-col m4 l4 s4"><strong>Eff:</strong> {{ data.log_entries[0].trip_efficiency | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
-                <p class="w3-col m4 l4 s4"><strong>Fuel:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
-                <p class="w3-col m4 l4 s4"><strong>Time:</strong> {{ data.log_entries[0].trip_fueling_time | default(0,True) }}min.</p>
+                <p class="w3-col m4 l4 s6"><strong>Eff:</strong> {{ data.log_entries[0].trip_efficiency | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
+                <p class="w3-col m4 l4 s6"><strong>Fuel:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
+                <p class="w3-col m4 l4 s6"><strong>Time:</strong> {{ data.log_entries[0].trip_fueling_time | default(0,True) }}min.</p>
             {% endif %}
             </div>
         <div id="home-trip-list" >
