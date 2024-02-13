@@ -132,12 +132,12 @@ def validate_form(view):
         flash('The Fuel Cost must be a number or zero')
         view.success = False
 
-    if isinstance(view.rec.fuel_qty,str):
-        view.rec.fuel_qty = view.rec.fuel_qty.strip()
-        if view.rec.fuel_qty.strip().endswith('%'):
-            view.rec.fuel_qty = view.rec.fuel_qty[0:-1]
+    if isinstance(view.rec.departure_fuel_level,str):
+        view.rec.departure_fuel_level = view.rec.departure_fuel_level.strip()
+        if view.rec.departure_fuel_level.strip().endswith('%'):
+            view.rec.departure_fuel_level = view.rec.departure_fuel_level[0:-1]
     try:
-        view.rec.fuel_qty = float(view.rec.fuel_qty)
+        view.rec.departure_fuel_level = float(view.rec.departure_fuel_level)
     except:
         flash('The Fuel Quantity must be a positive number.')
         view.success = False
@@ -276,10 +276,12 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
         {'name':'memo','type':'textarea',},
-        {'name':'projected_range','type':'number','default':0,'class':'keypad_input',},
-        {'name':'fuel_qty','type':'number','label':'Fuel Quantity as % of Full','default':0,'class':'keypad_input',},
+        {'name':'Recharge?','raw':True,'content':'<p class="w3-primary-color w3-center w3-bold w3-padding">Recharge?</p>'},
+        {'name':'arrival_fuel_level','type':'number','label':'Arrival fuel level as % of Full','default':0,'class':'keypad_input',},
+        {'name':'departure_fuel_level','type':'number','label':'Departure fuel level as % of Full','default':0,'class':'keypad_input',},
         {'name':'fueling_time','type':'text','label':'Fueling Time (minutes)','default':'0','class':'keypad_input',},
         {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)','class':'keypad_input',},
+        {'name':'projected_range','type':'number','label':'Projected range after charge','default':0,'class':'keypad_input',},
         {'name':'fuel_cost','type':'text','default':'0','class':'keypad_input',},
         ]
     )

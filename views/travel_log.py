@@ -40,36 +40,133 @@ def setExits(which=''):
         
     create_menus()
 
-def compile_trip_summary(recs,data) ->None:
+def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
     """
-    Compile summary data for a trip
+    Compile summary data for one or more trips
 
-    Walk the list of recs and store summary data in data['log_entries']
-
+    Creates a list item in 'data' named 'log_entries'. 
+    Each list element contains the log_entry data plus summary data for:
+    
+        *   Multi trip report: By submitting multiple trip ids in a list you will have a summary for
+            all those trips.
+        *   Trip Summary: summary data for each trip
+        *   Leg Data: for some elements calculate the distance or consumption during a prev
+            leg.
+    
     Arguments:
-        recs -- A list of LogEntry records with some additional columns
-        data -- A dict
+        data -- A dict to store the results
+        trip_ids -- a single integer for a trip.id or a list of ints for reporting on mutlple
+        trips. 
+
+    Optional Arguments:
+        summary -- create a summary report without individual log data { default : False }
     """
 
-    if recs:
-        data['log_entries'] = [ rec.asdict() for rec in recs]
-        trip_start = 0
-        prev_leg_start = 0
-        # import pdb;pdb.set_trace()
-        for x in range(len(data['log_entries'])):
-            rec = data['log_entries'][x]
-            print('prev leg start',prev_leg_start)
-            if not rec['odometer']: # may be none or empty string
-                rec['odometer'] = 0 
-            if not trip_start:
-                trip_start = rec['odometer']
-            if rec['odometer'] > trip_start:
-                data['log_entries'][x]['trip_distance'] = rec['odometer'] - trip_start
-            if not prev_leg_start:
-                prev_leg_start = rec['odometer']
-            if rec['odometer'] - prev_leg_start > 0:
-                data['log_entries'][x]['leg_distance'] = rec['odometer'] - prev_leg_start
-                prev_leg_start = rec['odometer']
+    data['log_entries'] = []
+
+    # import pdb;pdb.set_trace()
+
+    if not isinstance(trip_ids,list):
+        trip_ids = [trip_ids]
+
+    # report summary
+    sql = f"""  
+            select 
+            CAST (coalesce(min(odometer),0) AS INTEGER) as report_starting, 
+            CAST (coalesce(max(odometer),0) AS INTEGER) as report_ending,
+            CAST (sum(coalesce(departure_fuel_level,0)) AS INTEGER) as report_departure_fuel_level, 
+            CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as report_fueling_time,
+            CAST (sum(coalesce(fuel_cost,0)) AS REAL) as report_fuel_cost,
+            CAST (coalesce(max(odometer),0) AS INTEGER) - CAST (coalesce(min(odometer),0) AS INTEGER) as report_distance
+            from log_entry
+            where trip_id in ({','.join([str(x) for x in trip_ids])})
+        """
+    report_summary = models.LogEntry(g.db).query_one(sql).asdict()
+
+    for trip_id in trip_ids:
+        # Trip Summary
+        sql = f"""
+                select 
+                CAST (coalesce(min(odometer),0) AS INTEGER) as trip_starting, 
+                CAST (coalesce(max(odometer),0) AS INTEGER) as trip_ending,
+                CAST (sum(coalesce(arrival_fuel_level,0)) AS INTEGER) as trip_arrival_fuel_level,
+                CAST (sum(coalesce(departure_fuel_level,0)) AS INTEGER) as trip_departure_fuel_level,
+                CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as trip_fueling_time,
+                CAST (sum(coalesce(fuel_cost,0)) AS REAL) as trip_fuel_cost,
+                (CAST (coalesce(max(odometer),0) AS INTEGER) - CAST (coalesce(min(odometer),0) AS INTEGER)) as trip_distance,
+                vehicle.name as vehicle_name, 
+                CAST (coalesce(vehicle.fuel_capacity,0) AS INTEGER) as fuel_capacity,
+                vehicle.fuel_type as fuel_type
+                from log_entry 
+                join trip on log_entry.trip_id = trip.id
+                join vehicle on trip.vehicle_id = vehicle.id
+                where trip_id = {trip_id}
+        """
+        trip_summary = models.LogEntry(g.db).query_one(sql).asdict()
+        trip_summary['trip_efficiency'] = 0
+        if trip_summary['trip_distance'] > 0:
+            trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
+            trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
+
+        if trip_summary['fuel_type'].lower() == 'electric':
+            trip_summary['efficiency_factor'] = 'mi/kWh'
+        else:
+            trip_summary['efficiency_factor'] = 'mi/gal'
+ 
+
+        sql = f"""
+            select log_entry.id, location_name, 
+            CAST (coalesce(odometer,0) AS INTEGER) as odometer, entry_date, entry_type, trip_id,
+            memo, projected_range, charging_rate,
+            CAST (coalesce(arrival_fuel_level,0) AS INTEGER) as arrival_fuel_level, 
+            CAST (coalesce(departure_fuel_level,0) AS INTEGER) as departure_fuel_level, 
+            CAST (coalesce(charging_rate,0) AS INTEGER) as charging_rate, 
+            CAST (coalesce(fuel_cost,0) AS REAL) as fuel_cost, 
+            CAST (coalesce(fueling_time,0) AS INTEGER) as fueling_time,
+            vehicle.name as vehicle_name, 
+            CAST (coalesce(vehicle.fuel_capacity,0) AS INTEGER) as fuel_capacity,
+            vehicle.fuel_type as fuel_type
+            from log_entry 
+            join trip on log_entry.trip_id = trip.id
+            join vehicle on trip.vehicle_id = vehicle.id
+            where trip_id = {trip_id}
+            order by entry_date
+        """
+
+        recs = models.LogEntry(g.db).query(sql)
+        prev_log = {
+            'odometer':0,
+            'last_fuel_odo':0,
+        }
+        if recs:        
+            # import pdb;pdb.set_trace()
+            # Start of trip values...
+            prev_log['last_fuel_odo'] = recs[0].odometer 
+            prev_log['odometer'] = recs[0].odometer 
+
+            for rec in recs:
+                log = rec.asdict() # as dict so we can add elements
+                log['leg_distance'] = 0
+                if prev_log['odometer'] > 0:
+                    log['leg_distance'] = log['odometer'] - prev_log['odometer']
+
+                # only log fuel data if this is a fuel stop
+                if log['departure_fuel_level'] > log['arrival_fuel_level'] or log['fuel_cost']>0:
+                    log['leg_fuel_cost'] = log['fuel_cost']
+                    log['leg_fueling_time'] = log['fueling_time']
+                    log['leg_fuel_consumed'] = log['departure_fuel_level'] - log['arrival_fuel_level']
+                    log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
+                    log['leg_efficiency'] = 0
+                    if log['leg_fuel_distance']:
+                        log['leg_efficiency'] = log['leg_fuel_distance'] / (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])                    
+                        prev_log['last_fuel_odo'] = log['odometer']
+
+                prev_log['odometer'] = log['odometer']
+
+                log.update(report_summary)
+                log.update(trip_summary)
+
+                data['log_entries'].append(log)
 
 
 @mod.route('/<path:path>>',methods=['GET',])
@@ -85,30 +182,15 @@ def home():
         # create a vehicle record if none exists
         make_default_vehicle(session.get('user_id'))
 
-        # select the most recent trip record or at least the one the user wants
+        # select the most "current" trip record
         trip_id = get_current_trip_id()
         data['trip'] = models.Trip(g.db).get(trip_id)
         # get logs of the most recent trips if any
         if data['trip']:
-            sql = f"""
-                select log_entry.id, location_name, odometer, entry_date, entry_type, 
-                memo, fuel_qty, charging_rate, fuel_cost, fueling_time,
-                0 as trip_distance, 0 as leg_distance, vehicle.name as vehicle,
-                vehicle.fuel_capacity as fuel_capacity 
-                from log_entry 
-                join trip on log_entry.trip_id = trip.id
-                join vehicle on trip.vehicle_id = vehicle.id
-                where trip_id = {trip_id}
-                and trip.vehicle_id in (select id from vehicle where user_id = {session.get('user_id')})
-                order by entry_date
-            """
-            recs = models.LogEntry(g.db).query(sql)
-
-            data['log_entries'] = None
-            compile_trip_summary(recs,data)
-            
+            compile_trip_summary(data,trip_id)
 
     return render_template('travel_log/home.html',data=data)
+
 
 @mod.route('logout/',methods=['GET',])
 def logout():

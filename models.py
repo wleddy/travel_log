@@ -32,7 +32,7 @@ class LogEntry(SqliteTable):
             'latitude' REAL,
             'odometer' INT,
             'projected_range' INT,
-            'fuel_qty' INT,
+            'departure_fuel_level' INT,
             'charging_rate' INT,
             'fuel_cost' REAL,
             'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
@@ -47,6 +47,7 @@ class LogEntry(SqliteTable):
     
         column_list = [
          {'name':'fueling_time','definition':'TEXT'},
+         {'name':'arrival_fuel_level','definition':'TEXT'}
         ]
         
         return column_list
