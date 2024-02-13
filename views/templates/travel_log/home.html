@@ -130,12 +130,12 @@
                     <p class="w3-center w3-strong w3-border">Charging</p>
                     <div class="w3-row w3-row-padding" >
                         <p class="w3-col m4 l4 s6"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
+                        <p class="w3-col m4 l4 s6"><strong>Range:</strong> {{ rec.projected_range | default(0,True) }}mi.</p>
                         <p class="w3-col m4 l4 s6"><strong>Arrival:</strong> {{ rec.arrival_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s6"><strong>Depart:</strong> {{ rec.departure_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s6"><strong>Fuel:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
                         <p class="w3-col m4 l4 s6"><strong>Time:</strong> {{ rec.fueling_time | default(0,True) }}min.</p>
-                        <p class="w3-col m4 l4 s6"><strong>Range:</strong> {{ rec.projected_range | default(0,True) }}mi.</p>
-                        <p class="w3-col m4 l4 s6"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
+                        <p class="w3-col m4 l4 s6 w3-hide-small"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
                     </div>
                     {% endif %}
                 </div>
