@@ -103,15 +103,16 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 where trip_id = {trip_id}
         """
         trip_summary = models.LogEntry(g.db).query_one(sql).asdict()
-        trip_summary['trip_efficiency'] = 0
-        if trip_summary['trip_distance'] > 0:
-            trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
-            trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
+        if trip_summary:
+            trip_summary['trip_efficiency'] = 0
+            if trip_summary['trip_distance'] > 0:
+                trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
+                trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
 
-        if trip_summary['fuel_type'].lower() == 'electric':
-            trip_summary['efficiency_factor'] = 'mi/kWh'
-        else:
-            trip_summary['efficiency_factor'] = 'mi/gal'
+            if trip_summary['fuel_type'].lower() == 'electric':
+                trip_summary['efficiency_factor'] = 'mi/kWh'
+            else:
+                trip_summary['efficiency_factor'] = 'mi/gal'
  
 
         sql = f"""
