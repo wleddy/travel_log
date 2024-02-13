@@ -12,7 +12,6 @@
     }
     #login-section {
         text-align: center;
-
     }
     p#login {
         border:4pt solid skyblue;
@@ -28,10 +27,11 @@
         max-width:500pt;
         margin: auto;
     }
-   #trip-list-contain p {
-         margin:0;
+    div.log_title_row {
+        margin-top:2pt;
     }
-    #log_title_row h4, #log_title_row p {
+    
+    .log_title_row h4, .log_title_row p {
         margin:3pt 0 0 0;
         border-top: black 2pt solid;
     }
@@ -40,10 +40,6 @@
         cursor: pointer;
     }
 
-    table#home-trip-list {
-        margin:auto;
-    }
-    
     .home-trip-head {
         font-weight: bold;
     }
@@ -73,6 +69,7 @@
     #trip_stats_right {
         text-align: right;
     }
+    
 
 </style>
 
@@ -102,24 +99,30 @@
         </div>
         {% if data.trip %}
         <div id="trip-list-contain" >
-            <h3 id="trip_name" class="w3-secondary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
+            <h3 id="trip_name" class="w3-primary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
             {% if data.log_entries %}
             <div id="trip_stats_left" >
                 <p><strong>Car: </strong>{{ data.log_entries[0].vehicle_name | default('??',True)}}</p>
-                <p><strong>Fuel: </strong>{{ data.log_entries[0].trip_fuel_cost | money('$') }}</p>
             </div>
             <div id="trip_stats_right" >
-                <p><strong>Dist: </strong>{{ data.log_entries[0].trip_distance | default('0',True)}} mi.</p>
-                {% if data.log_entries[0].trip_efficiency%}
-                <p><strong>Efficency: </strong>{{ data.log_entries[0].trip_efficiency | default(0) | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
-                {% endif %}
             </div>
+            <div class="w3-row" >
+            {% if data.log_entries[0].trip_distance %}
+                <p class="w3-col m4 l4 s4"><strong>Leg:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
+            {% endif %}
+            {% if data.log_entries[0].trip_efficiency %}
+                <p class="w3-col m4 l4 s4"><strong>Eff:</strong> {{ data.log_entries[0].trip_efficiency | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
+                <p class="w3-col m4 l4 s4"><strong>Fuel:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
+                <p class="w3-col m4 l4 s4"><strong>Time:</strong> {{ data.log_entries[0].trip_fueling_time | default(0,True) }}min.</p>
+                <p class="w3-col m4 l4 s4"><strong>Range:</strong> {{ data.log_entries[0].projected_range | default(0,True) }}mi.</p>
+            {% endif %}
+            </div>
+        <div id="home-trip-list" >
         {% for rec in data.log_entries %}
-            <div id="home-trip-list" >
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
-                    <div id="log_title_row" class="w3-row w3-row-padding" >
+                    <div class="log_title_row w3-row w3-row-padding w3-secondary-color" >
                         <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
-                        <p class="w3-col  m4 l4 s4 w3-right-align" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</d>
+                        <p class="w3-col  m4 l4 s4 w3-right-align" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</p>
                     </div>
                     <div class="w3-row w3-row-padding" >
                         {% if rec.leg_distance %}
@@ -141,8 +144,8 @@
                         </div>
                     </div>
                    {% endif %}
-                </div>
             {% endfor %}
+            </div>
         </div>
             {% else %}
                 <p class="no_log" >No Log Entires Yet...</br> <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
