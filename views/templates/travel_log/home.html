@@ -123,18 +123,21 @@
                         <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
                         <p class="w3-col  m4 l4 s4 w3-right-align" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</p>
                     </div>
+                    {% if rec.leg_distance %}
+                    <p class="w3-row-padding"><strong>Dist:</strong> {{ rec.leg_distance }}mi.</p>
+                    {% endif %}  
+                    {% if rec.leg_efficiency %}
+                    <p class="w3-center w3-strong w3-border">Charging</p>
                     <div class="w3-row w3-row-padding" >
-                        {% if rec.leg_distance %}
-                        <p class="w3-col m4 l4 s4"><strong>Leg:</strong> {{ rec.leg_distance }}mi.</p>
-                        {% endif %}
-                        {% if rec.leg_efficiency %}
                         <p class="w3-col m4 l4 s4"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
+                        <p class="w3-col m4 l4 s4"><strong>Arrival:</strong> {{ rec.arrival_fuel_level | default(0,True) }}%</p>
+                        <p class="w3-col m4 l4 s4"><strong>Depart:</strong> {{ rec.departure_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s4"><strong>Fuel:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
                         <p class="w3-col m4 l4 s4"><strong>Time:</strong> {{ rec.fueling_time | default(0,True) }}min.</p>
                         <p class="w3-col m4 l4 s4"><strong>Range:</strong> {{ rec.projected_range | default(0,True) }}mi.</p>
                         <p class="w3-col m4 l4 s4"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
-                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
                     {% if rec.memo %}
                     <div id="log_memo_contain" >
