@@ -64,20 +64,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
 
     data['log_entries'] = []
 
-    # import pdb;pdb.set_trace()
-
     if not isinstance(trip_ids,list):
         trip_ids = [trip_ids]
 
     # report summary
     sql = f"""  
             select 
-            CAST (coalesce(min(odometer),0) AS INTEGER) as report_starting, 
-            CAST (coalesce(max(odometer),0) AS INTEGER) as report_ending,
-            CAST (sum(coalesce(departure_fuel_level,0)) AS INTEGER) as report_departure_fuel_level, 
             CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as report_fueling_time,
-            CAST (sum(coalesce(fuel_cost,0)) AS REAL) as report_fuel_cost,
-            CAST (coalesce(max(odometer),0) AS INTEGER) - CAST (coalesce(min(odometer),0) AS INTEGER) as report_distance
+            CAST (sum(coalesce(fuel_cost,0)) AS REAL) as report_fuel_cost
             from log_entry
             where trip_id in ({','.join([str(x) for x in trip_ids])})
         """
@@ -103,9 +97,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 where trip_id = {trip_id}
         """
         trip_summary = models.LogEntry(g.db).query_one(sql).asdict()
+
+        # if the last log entry has departure fuel level, deduct from eff. calculation
+        rec = models.LogEntry(g.db).query_one(f"select departure_fuel_level from log_entry where trip_id = {trip_id} order by entry_date DESC")
         
         if trip_summary:
             trip_summary['trip_efficiency'] = 0
+            if rec:
+                trip_summary['trip_departure_fuel_level'] -= int(rec.departure_fuel_level)
             if trip_summary['trip_distance'] > 0:
                 trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
                 trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
@@ -147,26 +146,33 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             prev_log['last_fuel_odo'] = recs[0].odometer 
             prev_log['odometer'] = recs[0].odometer 
             prev_log['departure_fuel_level'] = recs[0].departure_fuel_level
+            rec_count = len(recs)
+            first_entry = True
+            last_entry = False
+            current_rec = 0
             for rec in recs:
+                current_rec += 1
+                if current_rec >= rec_count:
+                    last_entry = True
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = 0
-                if prev_log['odometer'] > 0:
+                if prev_log['odometer'] > 0 or first_entry:
                     log['leg_distance'] = log['odometer'] - prev_log['odometer']
 
                 # only log fuel data if this is a fuel stop
-                if log['departure_fuel_level'] > log['arrival_fuel_level'] or log['fuel_cost']>0:
+                if log['departure_fuel_level'] > log['arrival_fuel_level']:
                     log['leg_fuel_cost'] = log['fuel_cost']
                     log['leg_fueling_time'] = log['fueling_time']
                     log['leg_fuel_consumed'] = prev_log['departure_fuel_level'] - log['arrival_fuel_level']
                     log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
                     log['leg_efficiency'] = 0
-                    if log['leg_fuel_distance']:
+                    if log['leg_fuel_distance'] or last_entry:
                         log['leg_efficiency'] = log['leg_fuel_distance'] / (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])                    
                         prev_log['last_fuel_odo'] = log['odometer']
                         prev_log['departure_fuel_level'] = log['departure_fuel_level']
 
                 prev_log['odometer'] = log['odometer']
-
+                first_entry = False
                 log.update(report_summary)
                 log.update(trip_summary)
 
