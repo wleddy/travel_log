@@ -10,7 +10,7 @@ import travel_log.models as models
 PRIMARY_TABLE = models.Vehicle
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
 
-mod = Blueprint(MOD_NAME,__name__, template_folder='templates/', url_prefix=f'/{MOD_NAME}')
+mod = Blueprint(MOD_NAME,__name__, template_folder='templates/', url_prefix=f'/travel_log/{MOD_NAME}')
 
 
 def setExits():
