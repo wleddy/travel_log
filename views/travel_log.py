@@ -84,7 +84,10 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 CAST (coalesce(min(odometer),0) AS INTEGER) as trip_starting, 
                 CAST (coalesce(max(odometer),0) AS INTEGER) as trip_ending,
                 CAST (sum(coalesce(arrival_fuel_level,0)) AS INTEGER) as trip_arrival_fuel_level,
-                CAST (sum(coalesce(departure_fuel_level,0)) AS INTEGER) as trip_departure_fuel_level,
+                CAST (sum(coalesce(departure_fuel_level,0)) AS INTEGER) -
+                    (SELECT CAST(coalesce(departure_fuel_level,0) AS INTEGER) from log_entry 
+                    where trip_id = {trip_id} order by entry_date DESC limit 1) 
+                    as trip_departure_fuel_level,
                 CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as trip_fueling_time,
                 CAST (sum(coalesce(fuel_cost,0)) AS REAL) as trip_fuel_cost,
                 (CAST (coalesce(max(odometer),0) AS INTEGER) - CAST (coalesce(min(odometer),0) AS INTEGER)) as trip_distance,
@@ -97,14 +100,9 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 where trip_id = {trip_id}
         """
         trip_summary = models.LogEntry(g.db).query_one(sql).asdict()
-
-        # if the last log entry has departure fuel level, deduct from eff. calculation
-        rec = models.LogEntry(g.db).query_one(f"select departure_fuel_level from log_entry where trip_id = {trip_id} order by entry_date DESC")
-        
+     
         if trip_summary:
             trip_summary['trip_efficiency'] = 0
-            if rec:
-                trip_summary['trip_departure_fuel_level'] -= int(rec.departure_fuel_level)
             if trip_summary['trip_distance'] > 0:
                 trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
                 trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
