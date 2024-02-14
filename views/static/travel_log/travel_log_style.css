@@ -26,14 +26,14 @@ h1, h2, h3, h4 {
 
 @media (prefers-color-scheme: dark) {
     :root {
-        color: #f8f8f8;
-        background-color: #747272;
+        color: white;
+        background-color: black;
 
-        --primary-color:#4b9bec;
+        --primary-color:#1e89f4;
         --primary-contrast: #fff;
         --primary-border: rgb(63, 36, 20);
-        --secondary-color: #c9ddfd; 
-        --secondary-contrast: #000;
+        --secondary-color: #75a3ed; 
+        --secondary-contrast: white;
         --secondary-border:#e3e5f8;
         --menu-border: rgb(247, 240, 230);
     

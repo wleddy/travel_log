@@ -44,7 +44,7 @@
         font-weight: bold;
     }
     .memo {
-        margin: 2pt 0 0 10pt;
+        margin: 2pt 10pt;
         background-color:lightcyan;
     }
     .no_log, .no_trip {
@@ -69,7 +69,16 @@
     #trip_stats_right {
         text-align: right;
     }
-    
+
+    @media (prefers-color-scheme: dark) {
+        .memo {
+            background-color: rgb(74, 112, 209);
+            color:white
+        }
+        .more span:first-child {
+            color:rgb(180, 189, 236);
+        }
+    }
 
 </style>
 
