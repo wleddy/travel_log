@@ -108,11 +108,11 @@
             </div>
             <div class="w3-row" >
             {% if data.log_entries[0].trip_distance %}
-                <p class="w3-col m4 l4 s6"><strong>Leg:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
+                <p class="w3-col m4 l4 s6"><strong>Dist:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
             {% endif %}
             {% if data.log_entries[0].trip_efficiency %}
                 <p class="w3-col m4 l4 s6"><strong>Eff:</strong> {{ data.log_entries[0].trip_efficiency | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
-                <p class="w3-col m4 l4 s6"><strong>Fuel:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
+                <p class="w3-col m4 l4 s6"><strong>Cost:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
                 <p class="w3-col m4 l4 s6"><strong>Time:</strong> {{ data.log_entries[0].trip_fueling_time | default(0,True) }}min.</p>
             {% endif %}
             </div>
@@ -133,7 +133,7 @@
                         <p class="w3-col m4 l4 s6"><strong>Range:</strong> {{ rec.projected_range | default(0,True) }}mi.</p>
                         <p class="w3-col m4 l4 s6"><strong>Arrival:</strong> {{ rec.arrival_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s6"><strong>Depart:</strong> {{ rec.departure_fuel_level | default(0,True) }}%</p>
-                        <p class="w3-col m4 l4 s6"><strong>Fuel:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
+                        <p class="w3-col m4 l4 s6"><strong>Cost:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
                         <p class="w3-col m4 l4 s6"><strong>Time:</strong> {{ rec.fueling_time | default(0,True) }}min.</p>
                         <p class="w3-col m4 l4 s6 w3-hide-small"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
                     </div>
