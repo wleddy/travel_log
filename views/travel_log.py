@@ -145,16 +145,12 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             prev_log['odometer'] = recs[0].odometer 
             prev_log['departure_fuel_level'] = recs[0].departure_fuel_level
             rec_count = len(recs)
-            first_entry = True
-            last_entry = False
             current_rec = 0
             for rec in recs:
                 current_rec += 1
-                if current_rec >= rec_count:
-                    last_entry = True
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = 0
-                if prev_log['odometer'] > 0 or first_entry:
+                if prev_log['odometer'] <= log['odometer']:
                     log['leg_distance'] = log['odometer'] - prev_log['odometer']
 
                 # only log fuel data if this is a fuel stop
@@ -164,13 +160,15 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                     log['leg_fuel_consumed'] = prev_log['departure_fuel_level'] - log['arrival_fuel_level']
                     log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
                     log['leg_efficiency'] = 0
-                    if log['leg_fuel_distance'] or last_entry:
+                     # always include last entry and guard from div by 0
+                    if log['leg_fuel_distance'] or \
+                        current_rec >= rec_count and \
+                        log['leg_fuel_consumed'] != 0:
                         log['leg_efficiency'] = log['leg_fuel_distance'] / (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])                    
                         prev_log['last_fuel_odo'] = log['odometer']
                         prev_log['departure_fuel_level'] = log['departure_fuel_level']
 
                 prev_log['odometer'] = log['odometer']
-                first_entry = False
                 log.update(report_summary)
                 log.update(trip_summary)
 
