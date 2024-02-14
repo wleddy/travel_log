@@ -154,17 +154,18 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                     log['leg_distance'] = log['odometer'] - prev_log['odometer']
 
                 # only log fuel data if this is a fuel stop
-                if log['departure_fuel_level'] > log['arrival_fuel_level']:
+                if log['arrival_fuel_level']:
                     log['leg_fuel_cost'] = log['fuel_cost']
                     log['leg_fueling_time'] = log['fueling_time']
                     log['leg_fuel_consumed'] = prev_log['departure_fuel_level'] - log['arrival_fuel_level']
                     log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
                     log['leg_efficiency'] = 0
                      # always include last entry and guard from div by 0
-                    if log['leg_fuel_distance'] or \
-                        current_rec >= rec_count and \
-                        log['leg_fuel_consumed'] != 0:
-                        log['leg_efficiency'] = log['leg_fuel_distance'] / (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])                    
+                    if log['leg_fuel_distance'] or current_rec >= rec_count and \
+                            log['leg_fuel_consumed'] != 0:
+                        log['leg_efficiency'] = log['leg_fuel_distance'] / \
+                            (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])
+                        
                         prev_log['last_fuel_odo'] = log['odometer']
                         prev_log['departure_fuel_level'] = log['departure_fuel_level']
 
