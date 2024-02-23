@@ -264,7 +264,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
 
     content = f"""
     <p>
-        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')}" />
+        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')[:-3]}" />
     </p>
     """
     
@@ -282,6 +282,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {'name':'fueling_time','type':'text','label':'Fueling Time (minutes)','default':'0','class':'keypad_input',},
         {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)','class':'keypad_input',},
         {'name':'projected_range','type':'number','label':'Projected range after charge','default':0,'class':'keypad_input',},
+        {'name':'fuel_added','type':'text','default':'0','label':'Fuel Added (kWh or Gal)','class':'keypad_input',},
         {'name':'fuel_cost','type':'text','default':'0','class':'keypad_input',},
         ]
     )

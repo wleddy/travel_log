@@ -71,6 +71,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
     sql = f"""  
             select 
             CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as report_fueling_time,
+            CAST (coalesce(fuel_added,0) AS REAL) as report_fuel_added, 
             CAST (sum(coalesce(fuel_cost,0)) AS REAL) as report_fuel_cost
             from log_entry
             where trip_id in ({','.join([str(x) for x in trip_ids])})
@@ -90,6 +91,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                     as trip_departure_fuel_level,
                 CAST (sum(coalesce(fueling_time,0)) AS INTEGER) as trip_fueling_time,
                 CAST (sum(coalesce(fuel_cost,0)) AS REAL) as trip_fuel_cost,
+                CAST (coalesce(fuel_added,0) AS REAL) as trip_fuel_added, 
                 (CAST (coalesce(max(odometer),0) AS INTEGER) - CAST (coalesce(min(odometer),0) AS INTEGER)) as trip_distance,
                 vehicle.name as vehicle_name, 
                 CAST (coalesce(vehicle.fuel_capacity,0) AS INTEGER) as fuel_capacity,
@@ -120,6 +122,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             CAST (coalesce(arrival_fuel_level,0) AS INTEGER) as arrival_fuel_level, 
             CAST (coalesce(departure_fuel_level,0) AS INTEGER) as departure_fuel_level, 
             CAST (coalesce(charging_rate,0) AS INTEGER) as charging_rate, 
+            CAST (coalesce(fuel_added,0) AS REAL) as fuel_added, 
             CAST (coalesce(fuel_cost,0) AS REAL) as fuel_cost, 
             CAST (coalesce(fueling_time,0) AS INTEGER) as fueling_time,
             vehicle.name as vehicle_name, 
@@ -157,11 +160,13 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 if log['arrival_fuel_level']:
                     log['leg_fuel_cost'] = log['fuel_cost']
                     log['leg_fueling_time'] = log['fueling_time']
+                    log['leg_fuel_added'] = log['fuel_added']                    
                     log['leg_fuel_consumed'] = prev_log['departure_fuel_level'] - log['arrival_fuel_level']
                     log['leg_fuel_distance'] = log['odometer'] - prev_log['last_fuel_odo']
                     log['leg_efficiency'] = 0
                      # always include last entry and guard from div by 0
-                    if log['leg_fuel_distance'] or current_rec >= rec_count and \
+                    if log['leg_fuel_distance'] or \
+                            current_rec >= rec_count and \
                             log['leg_fuel_consumed'] != 0:
                         log['leg_efficiency'] = log['leg_fuel_distance'] / \
                             (log['leg_fuel_consumed'] / 100  * log['fuel_capacity'])

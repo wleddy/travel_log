@@ -32,8 +32,9 @@ class LogEntry(SqliteTable):
             'latitude' REAL,
             'odometer' INT,
             'projected_range' INT,
-            'arrival_fuel_level' INt,
+            'arrival_fuel_level' INT,
             'departure_fuel_level' INT,
+            'fuel_added' REAL,
             'fueling_time' INT,
             'charging_rate' INT,
             'fuel_cost' REAL,
@@ -48,6 +49,7 @@ class LogEntry(SqliteTable):
         """
     
         column_list = [
+            {'name':'fuel_added','definition':'REAL',}
         ]
         
         return column_list

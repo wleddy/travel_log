@@ -143,8 +143,14 @@
                         <p class="w3-col m4 l4 s6"><strong>Arrival:</strong> {{ rec.arrival_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s6"><strong>Depart:</strong> {{ rec.departure_fuel_level | default(0,True) }}%</p>
                         <p class="w3-col m4 l4 s6"><strong>Cost:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
-                        <p class="w3-col m4 l4 s6"><strong>Time:</strong> {{ rec.fueling_time | default(0,True) }}min.</p>
+                        {% if rec.fuel_added and rec.fuel_type == 'Gas' %}
+                        <p class="w3-col m4 l4 s6"><strong>Gal:</strong> {{ rec.fuel_added | default(0,True) }}</p>
+                        {% endif %}
+                        {% if rec.fueling_time and rec.fuel_type == 'Electric' %}
+                        <p class="w3-col m4 l4 s6"><strong>CgTm:</strong> {{ rec.fueling_time | duration_minutes | default(0,True) }}</p>
+                        <p class="w3-col m4 l4 s6"><strong>kWh:</strong> {{ rec.fuel_added | default(0,True) }}</p>
                         <p class="w3-col m4 l4 s6 w3-hide-small"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
