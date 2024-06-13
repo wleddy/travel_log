@@ -284,6 +284,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
         {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"</div>",},
+        {"name":"map",'code':True,'content':'<div id="map" class="map"></div>'},
         ]
     )
     

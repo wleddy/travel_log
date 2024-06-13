@@ -10,7 +10,6 @@
     <form id="main-form" action="{{ g.editURL }}" method=post class="entry {{ form_column_class() }}" enctype="multipart/form-data">
 		{% include "editFormButtons.html" %}
         {% block fieldset %}{% endblock %}
-        <div id="map" class="map"></div>
     </form>
 </div>
 
@@ -60,7 +59,7 @@
         }
     }
     function set_map_display(){
-        if(($('#entry_type').val() != '') && ($('#lng').length )){
+        if(($('#entry_type').val() != '') && ($('#map').length )){
             // set the marker...
             $('#map').show();
             map = make_map("map");
@@ -94,7 +93,7 @@
         display_type(entry_type);
 
         // Only get location if there is a place to put it.
-        if (($("#lat").length) && (navigator.geolocation)) {
+        if (($("#map").length) && (navigator.geolocation)) {
             if ($("#id").val() == 0){
                 // only for new records
                 _onGetCurrentLocation();}
