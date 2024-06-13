@@ -116,16 +116,15 @@
             <div id="trip_stats_right" >
             </div>
             <div class="w3-row" >
-            {% if data.log_entries[0].trip_distance %}
-                <p class="w3-col m4 l4 s6"><strong>Dist:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
-            {% endif %}
-            {% if data.log_entries[0].trip_efficiency %}
-                <p class="w3-col m4 l4 s6"><strong>Eff:</strong> {{ data.log_entries[0].trip_efficiency | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
-                <p class="w3-col m4 l4 s6"><strong>Cost:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
-                {% if data.log_entries[0].trip_fueling_time and data.log_entries[0].fuel_type == 'Electric' %}
-                <p class="w3-col m4 l4 s6"><strong>CgTm:</strong> {{ data.log_entries[0].trip_fueling_time | duration_minutes | default(0,True) }}</p>
-                {% endif %}
-            {% endif %}
+                <p class="w3-col m3 l3 s6"><strong>Dist:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
+                <p class="w3-col m3 l3 s6"><strong>Eff:</strong> 
+                    {% if data.log_entries[0].trip_distance > 0 %}
+                    {{ (data.log_entries[0].trip_distance / data.trip_consumption) | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
+                    {% else %}
+                    0
+                    {% endif %}
+                <p class="w3-col m3 l3 s6"><strong>kWh:</strong> {{ data.trip_consumption | round(2) }}</p>
+                <p class="w3-col m3 l3 s6"><strong>Cost:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
             </div>
         <div id="home-trip-list" >
         {% for rec in data.log_entries %}
@@ -134,27 +133,13 @@
                         <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
                         <p class="w3-col  m4 l4 s4 w3-right-align" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</p>
                     </div>
-                    {% if rec.leg_distance %}
                     <p class="w3-row-padding"><strong>Dist:</strong> {{ rec.leg_distance }}mi.</p>
-                    {% endif %}  
-                    {% if rec.leg_efficiency %}
-                    <p class="w3-center w3-strong w3-border">Charging</p>
                     <div class="w3-row w3-row-padding" >
-                        <p class="w3-col m4 l4 s6"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
-                        <p class="w3-col m4 l4 s6"><strong>Range:</strong> {{ rec.projected_range | default(0,True) }}mi.</p>
-                        <p class="w3-col m4 l4 s6"><strong>Arrival:</strong> {{ rec.arrival_fuel_level | default(0,True) }}%</p>
-                        <p class="w3-col m4 l4 s6"><strong>Depart:</strong> {{ rec.departure_fuel_level | default(0,True) }}%</p>
-                        <p class="w3-col m4 l4 s6"><strong>Cost:</strong> {{ rec.leg_fuel_cost | default(0,True) | money('$') }}</p>
-                        {% if rec.fuel_added and rec.fuel_type == 'Gas' %}
-                        <p class="w3-col m4 l4 s6"><strong>Gal:</strong> {{ rec.fuel_added | default(0,True) }}</p>
-                        {% endif %}
-                        {% if rec.fueling_time and rec.fuel_type == 'Electric' %}
-                        <p class="w3-col m4 l4 s6"><strong>CgTm:</strong> {{ rec.fueling_time | duration_minutes | default(0,True) }}</p>
-                        <p class="w3-col m4 l4 s6"><strong>kWh:</strong> {{ rec.fuel_added | default(0,True) }}</p>
-                        <p class="w3-col m4 l4 s6 w3-hide-small"><strong>Rate:</strong> {{ rec.charging_rate | default(0,True) }}kW</p>
-                        {% endif %}
+                        <p class="w3-col m3 l3 s6"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
+                        <p class="w3-col m3 l3 s6"><strong>SOC:</strong> {{ rec.state_of_charge | default(0,True) }}%</p>
+                        <p class="w3-col m3 l3 s6"><strong>kWh:</strong> {{ rec.consumption | round(2) | default(0,True) }}</p>
+                        <p class="w3-col m3 l3 s6"><strong>Cost:</strong> {{ rec.cost | default(0,True) | money('$') }}</p>
                     </div>
-                    {% endif %}
                 </div>
                     {% if rec.memo %}
                     <div id="log_memo_contain" >
@@ -167,12 +152,12 @@
             </div>
         </div>
             {% else %}
-                <p class="no_log" >No Log Entires Yet...</br> <a href="{{url_for("travel_log.edit_log")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
+                <p class="no_log" >No Log Entires Yet...</br> <a href="{{url_for('travel_log.edit_log')}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>
             {% endif %}
         {% else %}
             <p class="no_trip">
                 You are not currenly on a Trip.<br/>
-                <a href="{{url_for("travel_log.edit_trip")}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Start a Trip?</a>
+                <a href="{{url_for('travel_log.edit_trip')}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Start a Trip?</a>
             </p>
         {% endif %}
     </div>

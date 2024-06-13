@@ -1,7 +1,7 @@
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
 from shotglass2.takeabeltof.date_utils import local_datetime_now, getDatetimeFromString
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 
 
@@ -16,7 +16,7 @@ class LogEntry(SqliteTable):
         self.order_by_col = 'entry_date'
         self.defaults = {
             'entry_date':str(local_datetime_now()),
-            'entry_UTC_date':datetime.utcnow(),
+            'entry_UTC_date':str(datetime.now(timezone.utc)),
         }
         
     def create_table(self):
@@ -28,16 +28,11 @@ class LogEntry(SqliteTable):
             'entry_date' DATETIME,
             'entry_UTC_date' DATETIME,
             'memo' TEXT,
-            'longitude' REAL,
-            'latitude' REAL,
+            'lat' REAL,
+            'lng' REAL,
             'odometer' INT,
-            'projected_range' INT,
-            'arrival_fuel_level' INT,
-            'departure_fuel_level' INT,
-            'fuel_added' REAL,
-            'fueling_time' INT,
-            'charging_rate' INT,
-            'fuel_cost' REAL,
+            'state_of_charge' INT,
+            'cost' REAL,
             'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
             """
         super().create_table(sql)
@@ -48,9 +43,11 @@ class LogEntry(SqliteTable):
         """A list of dicts used to add fields to an existing table.
         """
     
-        column_list = [
-            {'name':'fuel_added','definition':'REAL',}
-        ]
+        column_list = []
+        
+        # column_list = [
+        #     {'name':'fuel_added','definition':'REAL',}
+        # ]
         
         return column_list
     
@@ -108,6 +105,7 @@ class Trip(SqliteTable):
             'name' TEXT,
             'creation_date' DATETIME NOT NULL,
             'current_trip_date' DATETIME NOT NULL,
+            'battery_health' INT,
             'vehicle_id' INT,
              FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON DELETE CASCADE
             """
@@ -151,7 +149,7 @@ class Vehicle(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'lower(name)'
-        self.defaults = {}
+        self.defaults = {'battery_health':100,}
         
     def create_table(self):
         """Define and create a table"""
@@ -160,6 +158,7 @@ class Vehicle(SqliteTable):
             'name' TEXT,
             'fuel_type' TEXT,
             'fuel_capacity' INT,
+            'battery_health' INT DEFAULT 100,
             'user_id' INT,
              FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
             """

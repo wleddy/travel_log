@@ -10,6 +10,7 @@
     <form id="main-form" action="{{ g.editURL }}" method=post class="entry {{ form_column_class() }}" enctype="multipart/form-data">
 		{% include "editFormButtons.html" %}
         {% block fieldset %}{% endblock %}
+        <div id="map" class="map"></div>
     </form>
 </div>
 
@@ -23,9 +24,101 @@
 {% block head %}
 {{ super() }}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
+<style>
+    .marker {
+        background-image: url('/static/travel_log/images/header-small-logo.png') !important;
+        background-size:contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: rgba(255,255,255,.5);
+        border:solid .5pt #666;
+    }
+</style>
+{% include 'travel_log/mapbox-header.html' %}
+<script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
+
 {% if data and data.is_mobile_device %}
 <script src="{{ url_for('static', filename='keypad.js') }}"></script>
 {% endif %}
+<script>
+    var map;
+    var marker;
+
+    function set_type(){
+        $('#entry_type').val(this.text)
+        $('#log_fields').show();
+        $('#choose_type').hide();
+        set_cost_display();
+        display_type(this.text);
+        set_map_display();
+    }
+    function set_cost_display(){
+        $('#cost-container').show();
+        if($('#entry_type').val() != 'Departure'){
+            $('#cost-container').hide();
+        }
+    }
+    function set_map_display(){
+        if($('#entry_type').val() != ''){
+            // set the marker...
+            $('#map').show();
+            map = make_map("map");
+            map.dragRotate.disable();
+            marker = add_marker(map,$('#lng').val(),$('#lat').val(),$('#location_name').val())
+            marker.setDraggable(true).on('dragend', onDragEnd);
+
+        }else{
+            $('#map').hide();
+        }
+    }
+    function onDragEnd(){
+        const lngLat = marker.getLngLat();
+        $('#lng').val(lngLat.lng);
+        $('#lat').val(lngLat.lat);
+    }
+    function display_type(which){
+        $('#type_display').text(which); 
+    }
+    $(document).ready(function(){
+        var entry_type = $('#entry_type').val();
+        if (entry_type == ''){
+            $('#log_fields').hide();
+            $('.choose-type').on('click',set_type);
+            let d = new Date().toLocaleString()
+            $('entry_date').val(d)
+        }else{
+            $('#choose_type').hide();
+        }
+        set_cost_display();
+        display_type(entry_type);
+
+        // Only get location if there is a place to put it.
+        if (($("#lat").length) && (navigator.geolocation)) {
+            if ($("#id").val() == 0){
+                // only for new records
+                _onGetCurrentLocation();}
+        }
+        set_map_display();
+    })
+
+    function _onGetCurrentLocation () {
+        const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+        };
+        navigator.geolocation.getCurrentPosition( function (position) {
+            //use coordinates
+            $("#lat").val(position.coords.latitude);
+            $("#lng").val(position.coords.longitude);                
+        }, function (error) {
+            console.error(error);
+        }, options)
+    }
+
+</script>
+
 
 {% endblock head%}
 

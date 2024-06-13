@@ -62,7 +62,8 @@ def edit(rec_id=None):
         return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
-        # rec.entry_date = local_datetime_now()
+        # Display the log entry type screen
+        return render_template("log_entry_begin.html", rec=rec)
     else:
         rec = table.get(rec_id)
         if request.form:
@@ -115,31 +116,17 @@ def validate_form(view):
                 flash(view.result_text)
                 view.success = False
 
-    if view.rec.charging_rate and cleanRecordID(view.rec.charging_rate) < 0:
-        flash('The Charging Rate must be a positive number.')
-        view.success = False
-
     if cleanRecordID(view.rec.odometer) < 0:
         flash('The Odometer reading must be a positive number.')
         view.success = False
 
     try:
-        view.rec.fuel_cost = float(view.rec.fuel_cost)
-        if view.rec.fuel_cost < 0:
+        view.rec.cost = float(view.rec.cost)
+        if view.rec.cost < 0:
             flash('The Fuel Cost must be a positive number or zero.')
             view.success = False
     except:
         flash('The Fuel Cost must be a number or zero')
-        view.success = False
-
-    if isinstance(view.rec.departure_fuel_level,str):
-        view.rec.departure_fuel_level = view.rec.departure_fuel_level.strip()
-        if view.rec.departure_fuel_level.strip().endswith('%'):
-            view.rec.departure_fuel_level = view.rec.departure_fuel_level[0:-1]
-    try:
-        view.rec.departure_fuel_level = float(view.rec.departure_fuel_level)
-    except:
-        flash('The Fuel Quantity must be a positive number.')
         view.success = False
             
     return view.success # This is really redundant now...
@@ -246,29 +233,45 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     
     edit_fields.extend(
         [
-        {'name':'entry_type','label':'Log Type','type':'select','options':[
-            {'name':'Departure'},
-            {'name':'Point of Interest'},
-            {'name':'Arrival'},
-        ]},
+        {"name":"choose_type","type":"text","label":"",'code':True,'req':False,
+         'content': """
+        <div id="choose_type" class="w3-col w3-border w3-center w3-primary-color" >
+            <h2 class="w3-center">Select Entry Type</h2>
+            <div class="w3-row w3-padding">
+                <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Departure</a>
+            </div>
+            <div class="w3-row w3-padding">
+                <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Point of Interest</a>
+            </div>
+            <div class="w3-row w3-padding">
+                <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Arrival</a>
+            </div>
+        </div>
+        """,
+         },
+        {'name':'entry_type','type':'hidden','default':'',},
+        {"name":"log_fields",'code':True,'content':"""<div id="log_fields">""",},
+        {"name":"log_type_title",'code':True,
+         'content':"""<h3 class="w3-center w3-primary-color" id="type_display"></h3>""",},
         {'name':'location_name','label':'Where','req':True,},
+        {'name':'lat', 'default':"0"},
+        {'name':'lng','default':"0"},
         ]
     )    
  
-    edit_fields.append({'name':'entry_date','type':'label_only','label':'When','id':'entry_date_label'})
+    edit_fields.append({'name':'entry_date_label','type':'label_only','label':'When','id':'entry_date_label'})
     entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
     if is_mobile_device():
-        field_type = 'datetime-local' #Safari like this. I like it for mobile
+        field_type = 'datetime-local' #Safari likes this. I like it for mobile
     else:
         field_type = 'datetime' # I like this one better for Desktop
 
-    content = f"""
+    entry_date_dict['content'] = f"""
     <p>
         <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')[:-3]}" />
     </p>
     """
     
-    entry_date_dict['content'] = content
 
     edit_fields.extend([entry_date_dict])
 
@@ -276,14 +279,11 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
         {'name':'memo','type':'textarea',},
-        {'name':'Recharge?','raw':True,'content':'<p class="w3-primary-color w3-center w3-bold w3-padding">Recharge?</p>'},
-        {'name':'arrival_fuel_level','type':'number','label':'Arrival fuel level as % of Full','default':0,'class':'keypad_input',},
-        {'name':'departure_fuel_level','type':'number','label':'Departure fuel level as % of Full','default':0,'class':'keypad_input',},
-        {'name':'fueling_time','type':'text','label':'Fueling Time (minutes)','default':'0','class':'keypad_input',},
-        {'name':'charging_rate','type':'number','label':'Max Charging Rate (Electric Only)','class':'keypad_input',},
-        {'name':'projected_range','type':'number','label':'Projected range after charge','default':0,'class':'keypad_input',},
-        {'name':'fuel_added','type':'text','default':'0','label':'Fuel Added (kWh or Gal)','class':'keypad_input',},
-        {'name':'fuel_cost','type':'text','default':'0','class':'keypad_input',},
+        {'name':'state_of_charge','type':'number','label':'State of charge as % of Full','default':0,'class':'keypad_input',},
+        {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"<div id='cost-container'>",},
+        {'name':'cost','type':'text','default':'0','class':'keypad_input',},
+        {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
+        {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"</div>",},
         ]
     )
     

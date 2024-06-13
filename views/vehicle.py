@@ -84,6 +84,7 @@ def get_edit_field_list() ->list:
         options.append({'name':rec.name,'value':rec.name})
     edit_fields.append({'name':'fuel_type','type':'select', 'options': options,})
     edit_fields.append({'name':'fuel_capacity','type':'num','label':'Fuel Capacity in kWh, Gal. or Hours','class':'keypad_input'})
+    edit_fields.append({'name':'battery_health','type':'num','label':'Battery Health as %','class':'keypad_input','default':100,})
     
     user_options = []
     users = User(g.db).select()

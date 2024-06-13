@@ -1,0 +1,29 @@
+.map {
+  height:400px;
+  width:100%;
+  border:black 1pt solid;
+  }
+@media (max-width:400px) {
+  .map {
+    height:200px;
+  }
+}
+  .marker {
+    /* background-image: url('images/header-small-logo.png');
+    background-size:contain;
+    background-repeat: no-repeat;
+    background-position: center; */
+    background-color: rgba(127, 2, 2, .5);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .mapboxgl-popup {
+    max-width: 200px;
+  }
+  
+  .mapboxgl-popup-content {
+    text-align: center;
+    font-family: 'Open Sans', sans-serif;
+  }

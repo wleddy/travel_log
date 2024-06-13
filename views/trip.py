@@ -48,6 +48,7 @@ def edit(rec_id=None):
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
     view.edit_fields = get_edit_field_list()
+    view.validate_form = validate_form
 
     if request.form and view.success:
         import pdb;pdb.set_trace()
@@ -64,7 +65,12 @@ def edit(rec_id=None):
 def validate_form(view):
     # Validate the form
     goodForm = True
-                
+    # import pdb; pdb.set_trace()
+    if not view.rec.id and cleanRecordID(view.rec.vehicle_id) > 0:
+        car = models.Vehicle(g.db).get(cleanRecordID(view.rec.vehicle_id))
+        if car:
+            view.rec.battery_health = car.battery_health
+
     return goodForm
 
 def get_edit_field_list() -> list:
