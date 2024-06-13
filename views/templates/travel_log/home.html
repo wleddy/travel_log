@@ -118,7 +118,7 @@
             <div class="w3-row" >
                 <p class="w3-col m3 l3 s6"><strong>Dist:</strong> {{ data.log_entries[0].trip_distance }}mi.</p>
                 <p class="w3-col m3 l3 s6"><strong>Eff:</strong> 
-                    {% if data.log_entries[0].trip_distance > 0 %}
+                    {% if data.trip_consumption > 0%}
                     {{ (data.log_entries[0].trip_distance / data.trip_consumption) | round(2) }}{{ data.log_entries[0].efficiency_factor }}</p>
                     {% else %}
                     0
