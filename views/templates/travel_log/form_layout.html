@@ -60,7 +60,7 @@
         }
     }
     function set_map_display(){
-        if($('#entry_type').val() != ''){
+        if(($('#entry_type').val() != '') && ($('#lng').length )){
             // set the marker...
             $('#map').show();
             map = make_map("map");
