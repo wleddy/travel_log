@@ -212,6 +212,19 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         prev_odometer = prev_odometer.odometer
     if not prev_odometer:
         prev_odometer = 0
+    sql = f"""
+        select log_entry.state_of_charge as soc from trip
+        join log_entry on log_entry.trip_id = trip.id
+        where odometer is not null and trip.vehicle_id = (select vehicle_id from trip where trip.id = {get_current_trip_id()}) 
+        order by log_entry.entry_UTC_date DESC
+        limit 1
+    """
+    # import pdb;pdb.set_trace()
+    prev_soc= models.LogEntry(g.db).query_one(sql)
+    if prev_soc:
+        prev_soc = prev_soc.soc
+    if not prev_soc:
+        prev_soc = 0
 
     if user:
         cars = models.Vehicle(g.db).select(where=f"user_id = {user.id}")
@@ -277,7 +290,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
         {'name':'memo','type':'textarea',},
-        {'name':'state_of_charge','type':'number','label':'State of charge as % of Full','default':0,'class':'keypad_input',},
+        {'name':'state_of_charge','type':'number','label':'State of charge as % of Full','default':prev_soc,'class':'keypad_input',},
         {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"<div id='cost-container'>",},
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},

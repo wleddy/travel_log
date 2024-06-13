@@ -283,8 +283,6 @@ def edit_log(rec_id=None):
         return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
-        # Display the log entry type screen
-        # return render_template("log_entry_begin.html", rec=rec)
     else:
         rec = table.get(rec_id)
         if request.form:
