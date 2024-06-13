@@ -58,7 +58,7 @@
     .more span:nth-child(2) {
         display:none;
     }
-    #new_trip_button {
+    #new_log_button {
         position:relative;
         top:-10pt;
 		text-align: right;
@@ -102,11 +102,11 @@
     </div>
 {% else %}
     <div id="trip-list-contain " >
-        <div id="new_trip_button" >
+        {% if data.trip %}
+        <div id="new_log_button" >
             <p class="w3-hide-medium w3-hide-small " style="height:20pt;">&nbsp;</p>
             <p><a class="w3-btn w3-circle w3-xlarge w3-primary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
         </div>
-        {% if data.trip %}
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-primary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
             {% if data.log_entries %}
