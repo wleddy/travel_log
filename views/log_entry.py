@@ -9,6 +9,11 @@ from shotglass2.takeabeltof.jinja_filters import plural
 import travel_log.models as models
 from travel_log.views.travel_log import get_current_trip_id
 
+from datetime import datetime   
+import pytz
+from timezonefinder import TimezoneFinder 
+
+
 PRIMARY_TABLE = models.LogEntry
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
 
@@ -127,8 +132,18 @@ def validate_form(view):
         flash('The Fuel Cost must be a number or zero')
         view.success = False
             
-    return view.success # This is really redundant now...
+    # set the UTC datetime based on the location from the map
+    if view.rec.lat and view.rec.lng:
+        try:
+            tz = TimezoneFinder().timezone_at(lng=float(view.rec.lng), lat=float(view.rec.lat)) 
+            local = pytz.timezone(tz)
+            naive = datetime.strptime(str(view.rec.entry_date)[:19], "%Y-%m-%d %H:%M:%S")
+            local_dt = local.localize(naive, is_dst=None)
+            view.rec.entry_UTC_date = local_dt.astimezone(pytz.utc)
+        except:
+            view.rec.entry_UTC_date = datetime.now(pytz.utc)
 
+    return view.success
 
     
 def create_menus():
