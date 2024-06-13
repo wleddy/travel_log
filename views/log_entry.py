@@ -25,7 +25,8 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    
+    g.layout_to_extend = 'layout.html'
+
 
 # this handles table list and record delete
 @mod.route('/<path:path>',methods=['GET','POST',])
@@ -87,6 +88,7 @@ def edit(rec_id=None):
     if view.edit_fields is None:
         return redirect(g.listURL)
 
+    view.base_layout = "travel_log/form_layout.html"
 
     # Some methods in view you can override
     view.validate_form = validate_form # view does almost no validation

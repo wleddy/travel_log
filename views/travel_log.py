@@ -22,6 +22,7 @@ def setExits(which=''):
     g.editRL = url_for('.home')
     g.deleteURL = url_for('.home')
     g.suppress_page_header = True
+    g.layout_to_extend = 'travel_log/layout.html'
     if which == 'log':
         g.listURL = url_for('.log_list')
         g.editURL = url_for('.edit_log')
