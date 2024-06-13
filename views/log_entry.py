@@ -282,8 +282,8 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {"name":"log_type_title",'code':True,
          'content':"""<h3 class="w3-center w3-primary-color" id="type_display"></h3>""",},
         {'name':'location_name','label':'Where','req':True,},
-        {'name':'lat', 'default':"0"},
-        {'name':'lng','default':"0"},
+        {'name':'lat','type':'hidden', 'default':"0"},
+        {'name':'lng','type':'hidden','default':"0"},
         ]
     )    
  
