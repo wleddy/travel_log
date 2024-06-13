@@ -289,13 +289,13 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     edit_fields.extend(
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
-        {'name':'memo','type':'textarea',},
         {'name':'state_of_charge','type':'number','label':'State of charge as % of Full','default':prev_soc,'class':'keypad_input',},
         {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"<div id='cost-container'>",},
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
-        {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"</div>",},
+        {'name':'memo','type':'textarea',},
         {"name":"map",'code':True,'content':'<div id="map" class="map"></div>'},
+        {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"</div>",},
         ]
     )
     
