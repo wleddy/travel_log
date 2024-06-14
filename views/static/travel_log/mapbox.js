@@ -1,14 +1,19 @@
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmxlZGR5IiwiYSI6ImNpanh3endiNzFlNm12Mm01YjUwcmt0dzEifQ.Fgy28_Hfzzl_WEvN_ur2xQ';
 
-function make_map(map_div_id){
-  let lat = 0;
-  let lng = 0;
+function make_map(map_div_id,location=undefined){
+  // one of my favorite coffee shops...
+  let lng = -121.4631;
+  let lat = 38.56656;
 
-    if ($('#lat').length){
-        lat = $('#lat').val();
-        lng = $('#lng').val();
-    }
+  if(location != undefined){
+    lng = location.lng;
+    lat = location.lat;
+  }
+  else if ($('#lat').length){
+      lat = $('#lat').val();
+      lng = $('#lng').val();
+  } 
 
   let map = new mapboxgl.Map({
     container: map_div_id,

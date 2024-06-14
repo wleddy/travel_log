@@ -81,12 +81,148 @@
     }
 
 </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
+
+{% include 'travel_log/mapbox-header.html' %}
+<script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 <script>
     function show_more(which) {
         $("#" + which + " span").toggle(500)
     }
+
+    function create_map() {
+        map = make_map("map",map_center);
+        map.dragRotate.disable();
+        $('#map').show();
+    }
+    // coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
+    function set_markers(coords){
+        // match the route to the roads
+        updateRoute(coords.match_path);
+        // add the set_markers
+        for (const point of coords.points){
+            marker = add_marker(map,point.geometry.coordinates[0],point.geometry.coordinates[1],'<p class="w3-bold w3-large w3-center" >'+point.properties.title+'</p>');
+        }
+        // fit the map to the markers
+        map.fitBounds(map_bounds);
+
+    }
+    function get_map_bounds(coords) {
+        const nudge = .025; // how much space at edges
+        // get the ne most and se most points
+        let _ne =[-180,-90];
+        let _sw = [180,90];
+        for (var loc of coords.match_path){
+            if(loc[0]>_ne[0]){_ne[0]=loc[0];}
+            if(loc[1]>_ne[1]){_ne[1]=loc[1];}
+            if(loc[0]<_sw[0]){_sw[0]=loc[0];}
+            if(loc[1]<_sw[1]){_sw[1]=loc[1];}
+        }
+        const bounds = new mapboxgl.LngLatBounds(_sw,_ne);
+        const ne = bounds.getNorthEast();
+        ne.lat = ne.lat + (nudge * (Math.abs(ne.lat)/90));
+        ne.lng = ne.lng + nudge;
+        bounds.setNorthEast(ne);
+        const sw = bounds.getSouthWest();
+        sw.lat = sw.lat - (nudge * (Math.abs(sw.lat)/90));
+        sw.lng = sw.lng - nudge;
+        bounds.setSouthWest(sw);
+
+        return bounds;
+    }
+
+
+    function updateRoute(coords) {
+        removeRoute(); // Overwrite any existing layers
+
+        const profile = 'driving'; // Set the profile
+        // Format the coordinates
+        const newCoords = coords.join(';');
+        // Set the radius for each coordinate pair to 25 meters
+        const radius = coords.map(() => 15);
+        // matching only seems to work for very short distances for me...
+        //getMatch(newCoords, radius, profile);
+      }
+
+      // Make a Map Matching request
+      async function getMatch(coordinates, radius, profile) {
+        // Separate the radiuses with semicolons
+        const radiuses = radius.join(';');
+        // Create the query
+        const query = await fetch(
+          `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=true&access_token=${mapboxgl.accessToken}`,
+          { method: 'GET' }
+        );
+        const response = await query.json();
+        // Handle errors
+        if (response.code !== 'Ok') {
+          alert(
+            `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+          );
+          return;
+        }
+        const coords = response.matchings[0].geometry;
+        // Draw the route on the map
+        addRoute(coords);
+      }
+
+      // Draw the Map Matching route as a new layer on the map
+      function addRoute(coords) {
+        // If a route is already loaded, remove it
+        if (map.getSource('route')) {
+          map.removeLayer('route');
+          map.removeSource('route');
+        } else {
+          map.addLayer({
+            'id': 'route',
+            'type': 'line',
+            'source': {
+              'type': 'geojson',
+              'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': coords
+              }
+            },
+            'layout': {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            'paint': {
+              'line-color': '#03AA46',
+              'line-width': 8,
+              'line-opacity': 0.8
+            }
+          });
+        }
+      }
+
+      // If the user clicks the delete draw button, remove the layer if it exists
+      function removeRoute() {
+        if (!map.getSource('route')) return;
+        map.removeLayer('route');
+        map.removeSource('route');
+      }
+    var map;
+    var marker;
+    var map_bounds;
+    var map_center;
+    $(document).ready(function (){
+        var coords = {{ data.coords | safe }};
+        map_bounds = get_map_bounds(coords);
+        map_center = map_bounds.getCenter()
+        create_map(map_center);
+        set_markers(coords);
+        //const z = map.getZoom();
+        //map.setZoom(z-1);
+    })
 </script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
+
+{% include 'travel_log/mapbox-header.html' %}
+<script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 {% endblock head %}
 
@@ -150,6 +286,8 @@
                    {% endif %}
             {% endfor %}
             </div>
+            <div id="map" class="map"></div>
+            
         </div>
             {% else %}
                 <p class="no_log" >No Log Entires Yet...</br> <a href="{{url_for('travel_log.edit_log')}}0/?next={{ g.listURL }}" class="w3-button w3-round w3-primary-color" >Add Entry</a></p>

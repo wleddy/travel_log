@@ -23,16 +23,7 @@
 {{ super() }}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
-<style>
-    .marker {
-        background-image: url('/static/travel_log/images/header-small-logo.png') !important;
-        background-size:contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-color: rgba(255,255,255,.5);
-        border:solid .5pt #666;
-    }
-</style>
+
 {% include 'travel_log/mapbox-header.html' %}
 <script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 

@@ -8,6 +8,8 @@ from shotglass2.takeabeltof.jinja_filters import plural
 import travel_log.models as models
 import travel_log.views as tl_views
 
+import json
+
 PRIMARY_TABLE = None
 
 mod = Blueprint('travel_log',__name__, 
@@ -119,7 +121,9 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
         sql = f"""
             select log_entry.id, location_name, 
             CAST (coalesce(odometer,0) AS INTEGER) as odometer, entry_date, entry_type, trip_id,
-            memo,
+            memo, 
+            CAST (coalesce(lng,0) AS REAL) as lng,
+            CAST (coalesce(lat,0) AS REAL) as lat,
             CAST (coalesce(state_of_charge,0) AS INTEGER) as state_of_charge, 
             CAST (coalesce(cost,0) AS REAL) as cost, 
             vehicle.name as vehicle_name, 
@@ -138,8 +142,8 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
         prev_log = {
             'odometer':0,
             'state_of_charge':0,
-            'refuel_state_of_charge':0,
         }
+        data['coords'] = {'points':[],'match_path':[]}
         if recs:        
             # import pdb;pdb.set_trace()
             # Start of trip values...
@@ -165,8 +169,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
 
                 data['log_entries'].append(log)
 
-        data['trip_consumption'] = trip_consumption
+                # Create data to populate map
+                # coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
+                data['coords']["points"].append({"geometry":{"coordinates":[log["lng"],log["lat"]]},"properties":{"title":log['location_name']}})
+                data['coords']["match_path"].append([log["lng"],log["lat"]])
+                                        
 
+        data['trip_consumption'] = trip_consumption
+        data['coords'] = json.dumps(data['coords'])
 
 @mod.route('/<path:path>>',methods=['GET',])
 @mod.route('/',methods=['GET',])
