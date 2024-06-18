@@ -8,7 +8,7 @@
     height:200px;
   }
 }
-  .marker, .marker-red,.marker-green{
+  .marker, maker-DEP .marker-ARR,.marker-POI{
     background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
     background-size:contain;
     background-repeat: no-repeat;
@@ -20,10 +20,10 @@
     border-radius: 50%;
     cursor: pointer;
   }
-  .marker-red {
+  .marker-ARR {
       background-image: url('/static/travel_log/images/car_logo_red.png') !important;
   }
-  .marker-green {
+  .marker-POI {
     background-image: url('/static/travel_log/images/car_logo_green.png') !important;
   }
   .mapboxgl-popup {
