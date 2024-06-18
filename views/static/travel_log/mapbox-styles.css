@@ -33,4 +33,15 @@
   .mapboxgl-popup-content {
     text-align: center;
     font-family: 'Open Sans', sans-serif;
+    color:black;
+    background-color:white;
+  }
+  @media (prefers-color-scheme: dark) {
+    .mapboxgl-popup-content {
+      background-color:black;
+      color:white;
+    }
+    .mapboxgl-popup-close-button {
+      color:white;
+    }
   }

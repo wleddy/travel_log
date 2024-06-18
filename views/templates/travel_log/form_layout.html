@@ -22,9 +22,9 @@
 {% block head %}
 {{ super() }}
 
+{% include 'travel_log/mapbox-header.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
 
-{% include 'travel_log/mapbox-header.html' %}
 <script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 {% if data and data.is_mobile_device %}
