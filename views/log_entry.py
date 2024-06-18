@@ -288,20 +288,20 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     )    
  
     edit_fields.append({'name':'entry_date_label','type':'label_only','label':'When','id':'entry_date_label'})
-    entry_date_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
+    entry_dict = {'name':'entry_date','type':'datetime','raw':True,'content':''}
     if is_mobile_device():
         field_type = 'datetime-local' #Safari likes this. I like it for mobile
     else:
         field_type = 'datetime' # I like this one better for Desktop
 
-    entry_date_dict['content'] = f"""
+    entry_dict['content'] = f"""
     <p>
         <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')[:-3]}" />
     </p>
     """
     
 
-    edit_fields.extend([entry_date_dict])
+    edit_fields.extend([entry_dict])
 
     edit_fields.extend(
         [
@@ -311,6 +311,23 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
         {'name':'memo','type':'textarea',},
+        {'name':'log_image_label',"type":"label_only","label":"Photos",},
+        ])
+    if log_entry_rec.photo_list:
+        # import pdb;pdb.set_trace()
+        entry_dict = {'name':"photo_list","code":True,"label":None,'content':''}
+        entry_dict["content"] = """<div id="log_photo_list";><p>"""
+        for photo in log_entry_rec.photo_list:
+            entry_dict["content"] += f"""<img src="{ url_for('static',filename=photo.path)}" class="log_photo_small" />"""
+        
+        entry_dict["content"] += "</p></div>"
+        
+        edit_fields.extend([entry_dict])
+
+    edit_fields.extend([{"name":"log_photo_id","type":"file","label":"Pick a Photo",}])
+        
+    edit_fields.extend(
+        [
         {"name":"map",'code':True,'content':'<div id="map" class="map"></div>'},
         {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"</div>",},
         ]

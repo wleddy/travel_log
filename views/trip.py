@@ -7,7 +7,7 @@ from shotglass2.takeabeltof.jinja_filters import plural
 from shotglass2.users.models import User
 
 import travel_log.models as models
-from travel_log.views import log_entry, trip_photo, vehicle
+from travel_log.views import log_entry, log_photo, vehicle
 
 PRIMARY_TABLE = models.Trip
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
@@ -152,8 +152,8 @@ def create_menus():
         top_level=False,
         minimum_rank_required=500,
     )
-    g.admin.register(models.TripPhoto,
-        url_for('trip_photo.display'),
+    g.admin.register(models.LogPhoto,
+        url_for('log_photo.display'),
         display_name='Photos',
         top_level=False,
         minimum_rank_required=500,
@@ -171,11 +171,11 @@ def register_blueprints(app, subdomain = None) -> None:
         subdomain -- limit access to this subdomain if difined (default: {None})
     """ 
 
-    from travel_log.views import vehicle, log_entry, trip_photo, travel_log
+    from travel_log.views import vehicle, log_entry, travel_log
     app.register_blueprint(mod, subdomain=subdomain)
     app.register_blueprint(vehicle.mod, subdomain=subdomain)
     app.register_blueprint(log_entry.mod, subdomain=subdomain)
-    app.register_blueprint(trip_photo.mod, subdomain=subdomain)
+    app.register_blueprint(log_photo.mod, subdomain=subdomain)
     app.register_blueprint(travel_log.mod, subdomain=subdomain)
 
 

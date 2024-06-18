@@ -7,7 +7,7 @@ from shotglass2.takeabeltof.jinja_filters import plural
 
 import travel_log.models as models
 
-PRIMARY_TABLE = models.TripPhoto
+PRIMARY_TABLE = models.LogPhoto
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
 
 mod = Blueprint(MOD_NAME,__name__, template_folder='templates/', url_prefix=f'/travel_log/{MOD_NAME}')

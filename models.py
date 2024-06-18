@@ -51,6 +51,23 @@ class LogEntry(SqliteTable):
         
         return column_list
     
+    def get(self, key):
+        sql = f"""select *, 
+        coalesce(log_photo.id,0) as log_photo_id,
+        null as photo_list
+        from {self.table_name}
+        left join log_photo on log_photo.log_entry_id = {self.table_name}.id
+        where {self.table_name}.id = {cleanRecordID(key)}
+        order by {self.order_by_col}
+        """
+        rec = self._single_row(self.query(sql))
+        if rec:
+            # get log_photo records as list
+            rec.photo_list = LogPhoto(self.db).select(where=f'log_entry_id={rec.id}',)
+
+        return rec
+        
+    
     def update(self, rec, form, save=False) -> None:
         """
         Update the record with the contents of the form
@@ -218,15 +235,15 @@ class FuelType(SqliteTable):
         
 
 
-class TripPhoto(SqliteTable):
+class LogPhoto(SqliteTable):
     """Handle some basic interactions this table"""
 
-    TABLE_IDENTITY = 'trip_photo' # so we can get the table name before the app starts up
+    TABLE_IDENTITY = 'log_photo' # so we can get the table name before the app starts up
 
     def __init__(self,db_connection):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
-        self.order_by_col = 'image_date'
+        self.order_by_col = 'id'
         self.defaults = {}
         
     def create_table(self):
@@ -235,10 +252,8 @@ class TripPhoto(SqliteTable):
         sql = """
             'title' TEXT,
             'caption' TEXT,
-            'image_date' DATETIME,
-            'full' BLOB,
-            'thumbnail' BLOB,
-            'log_entry' INT REFERENCES log_entry(id) ON DELETE CASCADE
+            'path' TEXT,
+            'log_entry_id' INT REFERENCES log_entry(id) ON DELETE CASCADE
             """
         super().create_table(sql)
         
