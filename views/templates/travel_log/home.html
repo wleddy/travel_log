@@ -98,11 +98,14 @@
     }
     // coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
     function set_markers(coords){
-        // match the route to the roads
-        updateRoute(coords.match_path);
         // add the set_markers
         for (const point of coords.points){
-            marker = add_marker(map,point.geometry.coordinates[0],point.geometry.coordinates[1],'<p class="w3-bold w3-large w3-center" >'+point.properties.title+'</p>');
+            marker = add_marker(map,point.geometry.coordinates[0],point.geometry.coordinates[1],'<p class="w3-bold w3-large w3-center" >'+point.properties.entry_type+'<br>'+point.properties.title+'</p>');
+            if (point.properties.entry_type == 'POI'){
+                marker.addClassName('marker-POI');
+            } else if (point.properties.entry_type == 'ARR'){
+                marker.addClassName('marker-ARR');
+            }
         }
         // fit the map to the markers
         map.fitBounds(map_bounds);
@@ -213,6 +216,8 @@
         map_bounds = get_map_bounds(coords);
         map_center = map_bounds.getCenter()
         create_map(map_center);
+        // match the route to the roads
+        //updateRoute(coords.match_path);
         set_markers(coords);
         //const z = map.getZoom();
         //map.setZoom(z-1);

@@ -8,8 +8,8 @@
     height:200px;
   }
 }
-  .marker {
-    background-image: url('/static/travel_log/images/header-small-logo.png') !important;
+  .marker, .marker-red,.marker-green{
+    background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
     background-size:contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -19,6 +19,12 @@
     height: 50px;
     border-radius: 50%;
     cursor: pointer;
+  }
+  .marker-red {
+      background-image: url('/static/travel_log/images/car_logo_red.png') !important;
+  }
+  .marker-green {
+    background-image: url('/static/travel_log/images/car_logo_green.png') !important;
   }
   .mapboxgl-popup {
     max-width: 200px;
