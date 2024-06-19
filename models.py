@@ -1,6 +1,7 @@
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
 from shotglass2.takeabeltof.date_utils import local_datetime_now, getDatetimeFromString
+from shotglass2.takeabeltof.file_upload import FileUpload
 from datetime import datetime, timezone
 import pytz
 
@@ -256,8 +257,20 @@ class LogPhoto(SqliteTable):
             'log_entry_id' INT REFERENCES log_entry(id) ON DELETE CASCADE
             """
         super().create_table(sql)
+
+
+    def delete(self,id):
+        """Delete the specified record and the associated image file"""
+
+        id = cleanRecordID(id)
+        if id:
+            row = self.get(id)
+            if super().delete(id):
+                FileUpload().remove_file(row.path)
+                return True
+        return False
         
-        
+
     @property
     def _column_list(self):
         """A list of dicts used to add fields to an existing table.
