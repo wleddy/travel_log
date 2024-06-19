@@ -316,10 +316,17 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         # import pdb;pdb.set_trace()
         edit_fields.extend([{'name':'log_image_label',"type":"label_only","label":"Photos",}]),
         entry_dict = {'name':"photo_list","code":True,"label":None,'content':''}
+        entry_dict["content"] = """
+        <div id="large_photo_contain">
+            <img id="log_photo_large" src="" onclick="show_big_photo(this)" />
+            <div id="log_photo_large_title"><h3></h3><p></p></div>
+        </div>
+        """
+        edit_fields.extend([entry_dict])
+        entry_dict = {'name':"photo_list","code":True,"label":None,'content':''}
         entry_dict["content"] = """<div id="log_photo_list";></div><p class="clear">&nbsp;</p>"""
         
         edit_fields.extend([entry_dict])
-
     edit_fields.extend([{"name":"log_photo_id","type":"file","label":"Pick a Photo",}])
         
     edit_fields.extend(

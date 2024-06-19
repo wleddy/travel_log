@@ -116,3 +116,37 @@ img.log_photo_small {
     position:relative;
 
 }
+#large_photo_contain {
+    position: relative;
+    height:400px;
+    display:none;
+}
+@media (max-width:601px){
+    #large_photo_contain {
+        height:200px;
+    }
+}
+#log_photo_large {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    display:none;
+}
+
+#log_photo_large_title {
+    position:absolute;
+    width:100%;
+}
+
+div#log_photo_large_title h3, div#log_photo_large_title p {
+    color:white;
+    background-color:#666666af;
+    size:2em;
+    text-align: center;
+}
+
+div#log_photo_large_title h3 {
+    size:3em;
+    font-weight: bold;
+}

@@ -86,21 +86,23 @@ def log_photo_list(log_id=None):
 
     log_id=cleanRecordID(log_id)
     
-    html = ""
+    html = ''
+
     template = """
         <div class="photo_contain">
-        <img src="{{ url_for('static',filename=path) }}" class="log_photo_small" />
+        <img src="{{ url_for('static',filename=path) }}" name="{{ title | default('',True )}}" title = "{{ caption | default('',True )}}"
+        class="log_photo_small" onclick="show_big_photo(this)" />
         <div class="log_photo_small_delete" onclick="delete_photo_from_list({{id}})">X</div>
         </div>
         </div>
      """
     photos = PRIMARY_TABLE(g.db).select(where=f"log_entry_id = {log_id}")
-    if not photos:
-        html = "<p>No images found</p>"
-    else:
+    if photos:
         for photo in photos:
-            photo_dict = photo.asdict()
-            html += render_template_string(template, **photo_dict)
+            html += render_template_string(template, **photo.asdict())
+    else:
+        html = "<p>No images found</p>"
+
     return html
 
 
