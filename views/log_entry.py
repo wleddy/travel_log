@@ -311,16 +311,12 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
         {'name':'memo','type':'textarea',},
-        {'name':'log_image_label',"type":"label_only","label":"Photos",},
         ])
     if log_entry_rec.photo_list:
         # import pdb;pdb.set_trace()
+        edit_fields.extend([{'name':'log_image_label',"type":"label_only","label":"Photos",}]),
         entry_dict = {'name':"photo_list","code":True,"label":None,'content':''}
-        entry_dict["content"] = """<div id="log_photo_list";><p>"""
-        for photo in log_entry_rec.photo_list:
-            entry_dict["content"] += f"""<img src="{ url_for('static',filename=photo.path)}" class="log_photo_small" />"""
-        
-        entry_dict["content"] += "</p></div>"
+        entry_dict["content"] = """<div id="log_photo_list";></div><p class="clear">&nbsp;</p>"""
         
         edit_fields.extend([entry_dict])
 

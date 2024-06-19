@@ -1,5 +1,5 @@
 from flask import request, session, g, redirect, url_for, \
-     render_template, flash, Blueprint
+     render_template, flash, Blueprint, render_template_string
 from shotglass2.takeabeltof.utils import printException, cleanRecordID
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
@@ -57,7 +57,54 @@ def edit(rec_id=None):
 
     return view.render()
 
+@mod.route("/delete_from_log/<int:rec_id>",methods=["POST","GET"])
+@mod.route("/delete_from_log/<int:rec_id>/",methods=["POST","GET"])
+@mod.route("/delete_from_log",methods=["POST","GET"])
+@login_required
+def delete_from_log(rec_id=None,log_id=None):
+    rec_id = cleanRecordID(rec_id)
+    if rec_id > 0:
+        rec = PRIMARY_TABLE(g.db).get(rec_id)
+        log_id = rec.log_entry_id
+        PRIMARY_TABLE(g.db).delete(rec_id)
+        return log_photo_list(log_id)
     
+    return "<p>Invalid Request</p>"
+
+
+@mod.route("/log_photo_list/<int:log_id>",methods=["POST","GET"])
+@mod.route("/log_photo_list/<int:log_id>/",methods=["POST","GET"])
+def log_photo_list(log_id=None):
+    """ Returns fully formated html for the log_photos for the log_entry.id
+        
+    Args: log_id : int
+    
+    Returns:  str
+    
+    Raises: None
+    """
+
+    log_id=cleanRecordID(log_id)
+    
+    html = ""
+    template = """
+        <div class="photo_contain">
+        <img src="{{ url_for('static',filename=path) }}" class="log_photo_small" />
+        <div class="log_photo_small_delete" onclick="delete_photo_from_list({{id}})">X</div>
+        </div>
+        </div>
+     """
+    photos = PRIMARY_TABLE(g.db).select(where=f"log_entry_id = {log_id}")
+    if not photos:
+        html = "<p>No images found</p>"
+    else:
+        for photo in photos:
+            photo_dict = photo.asdict()
+            html += render_template_string(template, **photo_dict)
+    return html
+
+
+
 def validate_form(view):
     # Validate the form
     goodForm = True

@@ -81,6 +81,10 @@
         }
         set_cost_display();
         display_type(entry_type);
+        // load photos if any
+        if ($('#log_photo_list').length){
+            load_photo_in_list({{ data.rec.id | safe }})
+        }
 
         // Only get location if there is a place to put it.
         if (($("#map").length) && (navigator.geolocation)) {

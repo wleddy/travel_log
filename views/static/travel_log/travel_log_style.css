@@ -94,6 +94,25 @@ a.sg-page-begin
 
 
 img.log_photo_small {
+    position:relative;
     padding:3px;
     width:120px;
+}
+.log_photo_small_delete {
+    position:absolute;
+    text-align: right;
+    top:2pt;
+    right:3pt;
+    z-index:500;
+    
+    background-color:#4b9becba;
+    color:white;
+    font-weight:bold;
+    padding:2px;
+    cursor:pointer;
+}
+.photo_contain {
+    float:left;
+    position:relative;
+
 }
