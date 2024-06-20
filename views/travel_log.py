@@ -7,12 +7,10 @@ from shotglass2.users.admin import login_required
 from shotglass2.takeabeltof.views import TableView, EditView
 import travel_log.models as models
 import travel_log.views as tl_views
-from werkzeug.exceptions import RequestEntityTooLarge
 
 import json
 
 PRIMARY_TABLE = None
-IMAGE_PATH = "travel_log/log_entry"
 
 mod = Blueprint('travel_log',__name__, 
                 template_folder='templates/travel_log/', 
@@ -282,85 +280,9 @@ def add_log():
 @mod.route('edit_log/',methods=['GET','POST'])
 @login_required
 def edit_log(rec_id=None):
-    """ display the list of trips """
     setExits('log')
-    g.title = f" {models.LogEntry.TABLE_IDENTITY.replace('_',' ').title()} Record"
-
-    # Need to pre-fetch the log record so I can populate the form
-    # The record may now include an image so test upload size
-    try:
-        rec_id = cleanRecordID(request.form.get('id',rec_id))
-    except RequestEntityTooLarge as e:
-        # There does not seem to be a way to do anything with request.form if the content exceeds the limit
-        flash("The image file you submitted was too large. Maximum size is {} MB".format(request.max_content_length/2048))
-        return redirect(g.listURL)
-    
-    rec = None
-
-    table =  models.LogEntry(g.db)
-    if rec_id < 0:
-        flash("Invalid Request")
-        return redirect(g.listURL)
-    if rec_id == 0:
-        rec = table.new()
-    else:
-        rec = table.get(rec_id)
-        if rec is None:
-            flash("Record Not Found")
-            return g.listURL
-        
-        if request.form:
-            table.update(rec,request.form)
-        if not rec.entry_date:
-            rec.entry_date = local_datetime_now()
-
-    view = EditView(models.LogEntry,g.db,rec_id)
-    # import pdb;pdb.set_trace()
-
-    # Set the trip id for new records
-    if not view.rec.trip_id:
-        view.rec.trip_id = get_current_trip_id()
-        
-    view.edit_fields = tl_views.log_entry.get_edit_field_list(rec)
-
-    # convert the Trip select input to hidden and diaplay the trip name as text
-    trip = models.Trip(g.db).get(view.rec.trip_id)
-    if trip and view.edit_fields[0]['name'] == 'trip_id':
-        view.edit_fields[0]['type'] = 'hidden'
-        view.edit_fields.insert(0,{'name':'header','raw':True,'content':f'<h4 class="w3-secondary-color w3-center w3-bar">{trip.name}</h4><hr/>'})
-
-    view.validate_form = tl_views.log_entry.validate_form
-    view.base_layout = "travel_log/form_layout.html"
-    # view.form_template = "travel_log/log_entry/edit_template.html"
-
-    view.use_anytime_date_picker = not is_mobile_device()
-
-    if not view.rec.id:
-        g.title = 'New' + g.title
-    else:
-        g.title = 'Edit' + g.title
-
-    # Process the form?
-    if request.form and view.success:
-        # import pdb;pdb.set_trace()
-        # Update -> Validate -> Save...
-        view.update(save_after_update=True)
-        if view.success:
-            # save the image file if one exists
-            upload = save_image_file(view.rec.id,'log_photo_id')
-            if upload:
-                images = models.LogPhoto(g.db)
-                image_rec = images.new()
-                image_rec.path = upload.saved_file_path_string
-                image_rec.log_entry_id = view.rec.id
-                images.save(image_rec,commit=True)
-
-            if view.next:
-                return redirect(view.next)
-            return redirect(g.listURL)
-            
-    #else display the form
-    return view.render()
+    rec_id = cleanRecordID(rec_id)
+    return tl_views.log_entry.edit_log(rec_id,next=g.listURL)
 
 
 @mod.route('trips/<path:path>',methods=['GET','POST'])
@@ -398,35 +320,11 @@ def add_trip():
 @login_required
 def edit_trip(rec_id=None):
     setExits('trip')
-
     g.title = f" {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
-    rec_id = cleanRecordID(request.form.get('id',rec_id))
+    rec_id = cleanRecordID(rec_id)
+    return tl_views.trip.edit_trip(rec_id,next=g.listURL)
 
-    # import pdb;pdb.set_trace()
-
-    view = EditView(models.Trip,g.db,rec_id)
-
-    view.validate_form = tl_views.trip.validate_form
-    view.base_layout = "travel_log/form_layout.html"
-    view.edit_fields = tl_views.trip.get_edit_field_list()
-    view.use_anytime_date_picker = not is_mobile_device()
-
-    if not view.rec.id:
-        g.title = 'New' + g.title
-    else:
-        g.title = 'Edit' + g.title
- 
-    # Process the form?
-    if request.form and view.success:
-        view.update(save_after_update=True)
-        if view.success:
-            if view.next:
-                return redirect(view.next)
-            return redirect(g.listURL)
-            
-    #else display the form
-    return view.render()
 
 @mod.route('edit_current_trip',methods=['GET','POST'])
 @mod.route('edit_current_trip/',methods=['GET','POST'])
@@ -506,39 +404,10 @@ def car_list(path=''):
 @login_required
 def edit_car(rec_id=None):
     setExits('car')
-    g.title = f"Edit {models.Vehicle.TABLE_IDENTITY.replace('_',' ').title()} Record"
-    
-    rec_id = cleanRecordID(request.form.get('id',rec_id))
-    if rec_id < 0:
-        flash('Invalid Request')
-        return redirect(g.listURL)
-    
-    view = EditView(models.Vehicle,g.db,rec_id)
+    g.title = f" {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
-    view.validate_form = tl_views.vehicle.validate_form
-    view.base_layout = "travel_log/form_layout.html"
-    view.after_get_hook = after_view_get
-    view.edit_fields = tl_views.vehicle.get_edit_field_list()
-
-    # Process the form?
-    if request.form and view.success:
-        view.update(save_after_update=True)
-        if view.success:
-            if view.next:
-                return redirect(view.next)
-            return redirect(g.listURL)
-            
-    #else display the form
-    return view.render()
-
-def after_view_get(view):
-    # import pdb;pdb.set_trace()
-    if request.form:
-        # In the case where a submit failed, load the form values
-        view.table.update(view.rec,request.form)
-    if view.rec and not view.rec.id and not view.rec.user_id:
-        # a new record
-        view.rec.user_id = int(session.get('user_id',0))
+    rec_id = cleanRecordID(rec_id)
+    return tl_views.vehicle.edit_vehicle(rec_id,next=g.listURL)
 
 
 @mod.route('photos/',methods=['GET','POST'])
@@ -552,42 +421,6 @@ def photos():
 def account():
     return request.path
 
-
-def save_image_file(log_id,form_element='image_file'):
-    """ Save an image file if in request.file and return reference to image
-    
-    
-    Args: None
-    
-    Returns:  upload : FileUpload
-    
-    Raises: None
-    """
-
-    upload = None
-    file = request.files.get(form_element)
-    if file and file.filename:
-        upload = FileUpload(local_path='{}/{}'.format(IMAGE_PATH.rstrip('/'),log_id))
-        filename = file.filename
-        x = filename.find('.')
-        if x > 0:
-            upload.save(file,filename=filename,max_size=1000)
-            if upload.success:
-                return upload
-            else:
-                flash(upload.error_text)
-        else:
-            # there must be an extenstion
-            flash('The image file must have an extension at the end of the name.')
-    
-    return upload
-
-
-def validate_form(view):
-    # Validate the form
-    view.success = True
-                
-    return view.success
 
 def get_current_trip_id() -> int:
     """
@@ -634,30 +467,7 @@ def create_menus():
             ]
         })
         # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
-        if session.get('user_has_password'):
-            g.menu_items.append({'title':'Account','url':url_for('.account')})
+        # if session.get('user_has_password'):
+        #     g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
         
-        
-def register_blueprints(app, subdomain = None) -> None:
-    """
-    Register this module with the app for this module
-
-    Arguments:
-        app -- the current app
-
-    Keyword Arguments:
-        subdomain -- limit access to this subdomain if difined (default: {None})
-    """ 
-    app.register_blueprint(mod, subdomain=subdomain)
-
-
-def initialize_tables(db) -> None:
-    """
-    Initialize all the tables for this module
-
-    Arguments:
-        db -- connection to the database
-    """
-    
-    models.init_db(db)

@@ -1,6 +1,6 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
-from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
@@ -12,7 +12,7 @@ from travel_log.views import log_entry, log_photo, vehicle
 PRIMARY_TABLE = models.Trip
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
 
-mod = Blueprint(MOD_NAME,__name__, template_folder=f'templates/', url_prefix=f'/travel_log/{MOD_NAME}')
+mod = Blueprint(MOD_NAME,__name__, template_folder=f'templates/travel_log', url_prefix=f'/travel_log/{MOD_NAME}')
 
 
 def setExits():
@@ -20,7 +20,8 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    
+    g.layout_to_extend = 'layout.html'
+
 
 # this handles table list and record delete
 @mod.route('/<path:path>',methods=['GET','POST',])
@@ -45,13 +46,24 @@ def display(path=None):
 @table_access_required(PRIMARY_TABLE)
 def edit(rec_id=None):
     setExits()
+    return edit_trip(rec_id)
+
+def edit_trip(rec_id=None,**kwargs):
+    rec_id = get_rec_id_if_none(rec_id)
+    if rec_id < 0:
+        flash("Record ID must be greater than 0")
+        return redirect(g.listURL)
+
     g.title = "Edit {} Record".format(g.title)
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
     view.edit_fields = get_edit_field_list()
     view.validate_form = validate_form
+    view.base_layout = "travel_log/form_layout.html"
+
+    if not view.next:
+        view.next = kwargs.get("next",'')
 
     if request.form and view.success:
-        import pdb;pdb.set_trace()
         # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:

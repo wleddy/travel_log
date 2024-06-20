@@ -1,10 +1,12 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
-from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device
+from shotglass2.takeabeltof.file_upload import FileUpload
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.date_utils import date_to_string, local_datetime_now
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import travel_log.models as models
 from travel_log.views.travel_log import get_current_trip_id
@@ -16,9 +18,9 @@ from timezonefinder import TimezoneFinder
 
 PRIMARY_TABLE = models.LogEntry
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
+IMAGE_PATH = "travel_log/log_entry"
 
-mod = Blueprint(MOD_NAME,__name__, template_folder='templates/', url_prefix=f'/travel_log/{MOD_NAME}')
-
+mod = Blueprint(MOD_NAME,__name__, template_folder='templates/travel_log', url_prefix=f'/travel_log/{MOD_NAME}')
 
 def setExits():
     g.listURL = url_for('.display')
@@ -58,9 +60,23 @@ def display(path=None):
 def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
+    return edit_log(rec_id)
 
+def edit_log(rec_id=None,**kwargs):
+    # designed to be called from travel_log.py
     # Need to pre-fetch the log record so I can populate the form
-    rec_id = cleanRecordID(request.form.get('id',rec_id))
+    # The record may now include an image so test upload size
+    # import pdb;pdb.set_trace()
+    try:
+        rec_id = get_rec_id_if_none(rec_id)
+        if rec_id < 0:
+            flash("Record ID must be greater than 0")
+            return redirect(g.listURL)
+    except RequestEntityTooLarge as e:
+        # There does not seem to be a way to do anything with request.form if the content exceeds the limit
+        flash("The image file you submitted was too large. Maximum size is {} MB".format(request.max_content_length/2048))
+        return redirect(g.listURL)
+    
     rec = None
     table =  PRIMARY_TABLE(g.db)
     if rec_id < 0:
@@ -70,6 +86,9 @@ def edit(rec_id=None):
         rec = table.new()
     else:
         rec = table.get(rec_id)
+        if rec is None:
+            flash("Record Not Found")
+            return g.listURL
         if request.form:
             table.update(rec,request.form)
         if not rec.entry_date:
@@ -88,26 +107,84 @@ def edit(rec_id=None):
     if view.edit_fields is None:
         return redirect(g.listURL)
 
+    # convert the Trip select input to hidden and diaplay the trip name as text
+    trip = models.Trip(g.db).get(view.rec.trip_id)
+    if trip and view.edit_fields[0]['name'] == 'trip_id':
+        view.edit_fields[0]['type'] = 'hidden'
+        view.edit_fields.insert(0,{'name':'header','raw':True,'content':f'<h4 class="w3-secondary-color w3-center w3-bar">{trip.name}</h4><hr/>'})
+
     view.base_layout = "travel_log/form_layout.html"
-
+    view.delete = delete
     # Some methods in view you can override
-    view.validate_form = validate_form # view does almost no validation
-    # view.after_get_hook = ? # view has just loaded the record from disk
-    # view.before_commit_hook = ? # view is about to commit the record
+    view.validate_form = validate_form 
 
-    # Process the form?
+    view.use_anytime_date_picker = not is_mobile_device()
+    if not view.next:
+        view.next = kwargs.get("next",'')
+
+     # Process the form?
     if request.form and view.success:
+        # import pdb;pdb.set_trace()
         # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:
+            # save the image file if one exists
+            upload = save_image_file(view.rec.id,'log_photo_id')
+            if upload:
+                images = models.LogPhoto(g.db)
+                image_rec = images.new()
+                image_rec.path = upload.saved_file_path_string
+                image_rec.log_entry_id = view.rec.id
+                images.save(image_rec,commit=True)
+
             if view.next:
                 return redirect(view.next)
             return redirect(g.listURL)
-
-    # otherwise send the list...
+            
+    #else display the form
     return view.render()
 
+
+def delete(view):
+    """ensure that image files are deleted when deleting a log entry"""
+    import pdb;pdb.set_trace()
+    log_pics = models.LogPhoto(g.db).select(where=f"log_entry_id = {view.rec_id}")
+    for pic in log_pics:
+        pic.delete(pic.id)
+
+    return PRIMARY_TABLE(g.db).delete(view.rec_id)
     
+
+def save_image_file(log_id,form_element='image_file'):
+    """ Save an image file if in request.file and return reference to image
+    
+    
+    Args: None
+    
+    Returns:  upload : FileUpload
+    
+    Raises: None
+    """
+
+    upload = None
+    file = request.files.get(form_element)
+    if file and file.filename:
+        upload = FileUpload(local_path='{}/{}'.format(IMAGE_PATH.rstrip('/'),log_id))
+        filename = file.filename
+        x = filename.find('.')
+        if x > 0:
+            upload.save(file,filename=filename,max_size=1000)
+            if upload.success:
+                return upload
+            else:
+                flash(upload.error_text)
+        else:
+            # there must be an extenstion
+            flash('The image file must have an extension at the end of the name.')
+    
+    return upload
+
+
 def validate_form(view):
     # Validate the form
     view._set_edit_fields()

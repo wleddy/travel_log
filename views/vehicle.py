@@ -1,6 +1,6 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
-from shotglass2.takeabeltof.utils import printException, cleanRecordID
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
@@ -18,6 +18,7 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
+    g.layout_to_extend = 'layout.html'
     
 
 # this handles table list and record delete
@@ -45,20 +46,59 @@ def display(path=None):
 def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
-    view = EditView(PRIMARY_TABLE,g.db,rec_id)
-    view.edit_fields = get_edit_field_list()
+    return edit_vehicle(rec_id)
 
+def edit_vehicle(rec_id=None,**kwargs):
+    # import pdb;pdb.set_trace()
+    rec_id = get_rec_id_if_none(rec_id)
+    if rec_id < 0:
+        flash("Record ID must be greater than 0")
+        return redirect(g.listURL)
+        
+    view = EditView(models.Vehicle,g.db,rec_id)
+
+    view.validate_form = validate_form
+    view.base_layout = "travel_log/form_layout.html"
+    view.after_get_hook = after_view_get
+    view.edit_fields = get_edit_field_list()
+    # view.delete = delete
+    if not view.next:
+        view.next = kwargs.get("next") 
+        
+    # Process the form?
     if request.form and view.success:
-        # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:
             if view.next:
                 return redirect(view.next)
             return redirect(g.listURL)
-
+            
+    #else display the form
     return view.render()
 
-    
+    # view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    # view.edit_fields = get_edit_field_list()
+
+    # if request.form and view.success:
+    #     # Update -> Validate -> Save...
+    #     view.update(save_after_update=True)
+    #     if view.success:
+    #         if view.next:
+    #             return redirect(view.next)
+    #         return redirect(g.listURL)
+
+    # return view.render()
+
+def after_view_get(view):
+    # import pdb;pdb.set_trace()
+    if request.form:
+        # In the case where a submit failed, load the form values
+        view.table.update(view.rec,request.form)
+    if view.rec and not view.rec.id and not view.rec.user_id:
+        # a new record
+        view.rec.user_id = int(session.get('user_id',0))
+
+
 def validate_form (view):
     # Validate the form
     goodForm = True

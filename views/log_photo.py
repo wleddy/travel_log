@@ -1,6 +1,6 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint, render_template_string
-from shotglass2.takeabeltof.utils import printException, cleanRecordID
+from shotglass2.takeabeltof.utils import printException, cleanRecordID, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
@@ -18,7 +18,8 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    
+    g.layout_to_extend = 'layout.html'
+
 
 # this handles table list and record delete
 @mod.route('/<path:path>',methods=['GET','POST',])
@@ -45,8 +46,18 @@ def display(path=None):
 def edit(rec_id=None):
     setExits()
     g.title = "Edit {} Record".format(g.title)
-    view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    return edit_photo(rec_id)
 
+def edit_photo(rec_id,**kwargs):
+    rec_id = get_rec_id_if_none(rec_id)
+    if rec_id < 0:
+        flash("Record ID must be greater than 0")
+        return redirect(g.listURL)
+
+    view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    if not view.next:
+        view.next = kwargs.get("next")
+        
     if request.form and view.success:
         # Update -> Validate -> Save...
         view.update(save_after_update=True)
