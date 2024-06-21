@@ -1,4 +1,5 @@
-{% extends g.layout_to_extend %}
+{% if g.base_layout %}{% extends g.base_layout %}{% else %}{% extends 'layout.html' %}{% endif %}
+
 {% block title %}{{ g.title }}{% endblock %}
 
 {% from "_layout_helpers.html" import left_column_spacer, form_column_class %}
@@ -23,9 +24,6 @@
 {{ super() }}
 
 {% include 'travel_log/mapbox-header.html' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='travel_log/mapbox-styles.css' )}}">
-
-<script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 {% if data and data.is_mobile_device %}
 <script src="{{ url_for('static', filename='keypad.js') }}"></script>
