@@ -24,14 +24,14 @@ def setExits(which=''):
     g.editRL = url_for('.home')
     g.deleteURL = url_for('.home')
     g.suppress_page_header = True
-    g.layout_to_extend = 'travel_log/layout.html'
+    g.base_layout = 'travel_log/layout.html'
     if which == 'log':
         g.listURL = url_for('.log_list')
         g.editURL = url_for('.edit_log')
         g.deleteURL = g.listURL + 'delete/'
         g.suppress_page_header = False
     elif which == 'trip':
-        g.listURL = url_for('.trip_list')
+        g.listURL = url_for('.home')
         g.editURL = url_for('.edit_trip')
         g.deleteURL = g.listURL + 'delete/'
         g.suppress_page_header = False
@@ -241,38 +241,12 @@ def new_account():
         return redirect(url_for('.home'))
     
     return redirect(url_for('user.register') + f'?next={url_for(".home")}')
-
-@mod.route('log_list/<path:path>',methods=['GET','POST'])
-@mod.route('log_list/',methods=['GET','POST'])
-@login_required
-def log_list(path=''):
-    setExits('log')
-    g.title = f"{models.LogEntry(g.db).display_name} Record List"
-
-    view = TableView(models.LogEntry,g.db)
-    # optionally specify the list fields
-    view.list_fields = [
-        {'name':'id',},
-        {'name':'location_name',},
-        {'nmame':'entry_type',},
-        {'name':'entry_date','type':'datetime','search':'datetime',},
-        {'name':'memo'},
-        ]
-    
-    view.base_layout = 'travel_log/layout.html'
-    view.use_anytime_date_picker = not is_mobile_device()
-    
-    if view.next  and 'delete' not in path:
-        return redirect(view.next) # was called from somewhere else
-    
-    return view.dispatch_request()
-    
+  
 
 @mod.route('add_log/',methods=['GET','POST'])
 @login_required
 def add_log():
-    setExits()
-    return redirect(url_for('.edit_log') + f'0/?next={g.listURL}')
+    return edit_log(0)
 
 
 @mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
@@ -282,7 +256,18 @@ def add_log():
 def edit_log(rec_id=None):
     setExits('log')
     rec_id = cleanRecordID(rec_id)
-    return tl_views.log_entry.edit_log(rec_id,next=g.listURL)
+    return tl_views.log_entry.edit_log(rec_id,next=url_for(".home"),)
+
+
+@mod.route('log_list/<path:path>',methods=['GET','POST'])
+@mod.route('log_list/',methods=['GET','POST'])
+@login_required
+def log_list(path=''):
+    setExits('log')
+    # import pdb;pdb.set_trace()
+    if '?next=' not in path:
+        path += f"?next={url_for('.home')}"
+    return tl_views.log_entry.log_entry_list(path)
 
 
 @mod.route('trips/<path:path>',methods=['GET','POST'])
@@ -310,8 +295,7 @@ def trip_list(path=''):
 @mod.route('add_trip/',methods=['GET','POST'])
 @login_required
 def add_trip():
-    setExits()
-    return redirect(url_for('.edit_trip') + f'0/?next={g.listURL}')
+    return edit_trip(0)
 
 
 @mod.route('edit_trip/<int:rec_id>',methods=['GET','POST'])
@@ -323,7 +307,7 @@ def edit_trip(rec_id=None):
     g.title = f" {models.Trip.TABLE_IDENTITY.replace('_',' ').title()} Record"
 
     rec_id = cleanRecordID(rec_id)
-    return tl_views.trip.edit_trip(rec_id,next=g.listURL)
+    return tl_views.trip.edit_trip(rec_id,next=url_for(".home"))
 
 
 @mod.route('edit_current_trip',methods=['GET','POST'])

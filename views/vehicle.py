@@ -18,7 +18,6 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    g.layout_to_extend = 'layout.html'
     
 
 # this handles table list and record delete

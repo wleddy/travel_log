@@ -27,7 +27,6 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    g.layout_to_extend = 'layout.html'
 
 
 # this handles table list and record delete
@@ -38,13 +37,18 @@ def setExits():
 def display(path=None):
     # import pdb;pdb.set_trace()
     setExits()
-    
+    return log_entry_list(path)
+
+def log_entry_list(path=None,**kwargs):
+    # this may be called from the travel_log module
+    # import pdb;pdb.set_trace()
     view = TableView(PRIMARY_TABLE,g.db)
+    view.delete = delete
     # optionally specify the list fields
     view.list_fields = [
         {'name':'id',},
         {'name':'location_name',},
-        {'nmame':'entry_type',},
+        {'name':'entry_type',},
         {'name':'entry_date','type':'datetime','search':'datetime',},
         {'name':'memo'},
         ]
@@ -79,9 +83,6 @@ def edit_log(rec_id=None,**kwargs):
     
     rec = None
     table =  PRIMARY_TABLE(g.db)
-    if rec_id < 0:
-        flash("Invalid Request")
-        return redirect(g.listURL)
     if rec_id == 0:
         rec = table.new()
     else:
@@ -146,14 +147,20 @@ def edit_log(rec_id=None,**kwargs):
 
 
 def delete(view):
-    """ensure that image files are deleted when deleting a log entry"""
-    import pdb;pdb.set_trace()
-    log_pics = models.LogPhoto(g.db).select(where=f"log_entry_id = {view.rec_id}")
-    for pic in log_pics:
-        pic.delete(pic.id)
+    """ensure that image files are deleted when deleting a log entry"""        
 
-    return PRIMARY_TABLE(g.db).delete(view.rec_id)
-    
+    # import pdb;pdb.set_trace()
+    temp_rec = view.table.get(view.rec_id) #temp_rec.photo_list may contain a list of LogPhoto DataRows
+
+    view.success = view.table.delete(view.rec_id) # Related LogPhoto recs have been deleted too
+    if view.success:
+        view.db.commit()
+        if temp_rec.photo_list:
+            for pic in temp_rec.photo_list:
+                FileUpload().remove_file(pic.path)
+    else:
+        view.result_text = 'Not able to delete the Log Entry record.'
+ 
 
 def save_image_file(log_id,form_element='image_file'):
     """ Save an image file if in request.file and return reference to image

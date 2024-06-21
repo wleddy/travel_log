@@ -3,7 +3,6 @@ from flask import request, session, g, redirect, url_for, \
 from shotglass2.takeabeltof.utils import printException, cleanRecordID, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
-from shotglass2.takeabeltof.jinja_filters import plural
 
 import travel_log.models as models
 
@@ -18,7 +17,6 @@ def setExits():
     g.editURL = url_for('.edit')
     g.deleteURL = url_for('.display') + 'delete/'
     g.title = f'{PRIMARY_TABLE(g.db).display_name}'
-    g.layout_to_extend = 'layout.html'
 
 
 # this handles table list and record delete
@@ -72,7 +70,7 @@ def edit_photo(rec_id,**kwargs):
 @mod.route("/delete_from_log/<int:rec_id>/",methods=["POST","GET"])
 @mod.route("/delete_from_log",methods=["POST","GET"])
 @login_required
-def delete_from_log(rec_id=None,log_id=None):
+def delete_from_log(rec_id=None):
     rec_id = cleanRecordID(rec_id)
     if rec_id > 0:
         rec = PRIMARY_TABLE(g.db).get(rec_id)
