@@ -68,6 +68,16 @@ class LogEntry(SqliteTable):
 
         return rec
         
+    def new(self,set_defaults=True):
+        """return an 'empty' DataRow object for the table.
+        In this case we need to add extra field to hold extra photo data
+        """
+        rec = self.get_column_names()
+        rec.extend(['photo_list','log_photo_id'])
+        rec = self._get_data_row(column_names=rec)
+        if set_defaults:
+            self.set_defaults(rec)
+        return rec
     
     def update(self, rec, form, save=False) -> None:
         """
@@ -97,7 +107,7 @@ class LogEntry(SqliteTable):
                 # set entry_UTC_date to the UTC equivelent for the entry_date
                 rec.entry_UTC_date = form_entry_date.astimezone(pytz.utc)
         else:
-            rec.entry_UTC_date = datetime.utcnow()
+            rec.entry_UTC_date = datetime.now(timezone.utc) 
 
         return super().update(rec, form, save)
     
