@@ -31,7 +31,7 @@ def setExits(which=''):
         g.deleteURL = g.listURL + 'delete/'
         g.suppress_page_header = False
     elif which == 'trip':
-        g.listURL = url_for('.home')
+        g.listURL = url_for('.trip_list')
         g.editURL = url_for('.edit_trip')
         g.deleteURL = g.listURL + 'delete/'
         g.suppress_page_header = False
