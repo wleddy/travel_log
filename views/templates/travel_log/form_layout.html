@@ -86,7 +86,7 @@
 
         // Only get location if there is a place to put it.
         if (($("#map").length) && (navigator.geolocation)) {
-            if ($("#id").val() == 0){
+            if (($("#id").val() == 0) || ($('#lat').val() == 0 )|| ($('#lng').val() == 0 )){
                 // only for new records
                 _onGetCurrentLocation();}
         }
