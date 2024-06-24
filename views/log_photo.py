@@ -1,13 +1,16 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint, render_template_string
+from shotglass2.takeabeltof.file_upload import FileUpload
 from shotglass2.takeabeltof.utils import printException, cleanRecordID, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
 from shotglass2.takeabeltof.views import TableView, EditView
+from werkzeug.exceptions import RequestEntityTooLarge
 
 import travel_log.models as models
 
 PRIMARY_TABLE = models.LogPhoto
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
+IMAGE_PATH = "travel_log/log_entry"
 
 mod = Blueprint(MOD_NAME,__name__, template_folder='templates/', url_prefix=f'/travel_log/{MOD_NAME}')
 
@@ -47,16 +50,43 @@ def edit(rec_id=None):
     return edit_photo(rec_id)
 
 def edit_photo(rec_id,**kwargs):
-    rec_id = get_rec_id_if_none(rec_id)
+    next = kwargs.get('next',g.listURL)
+    try:
+        rec_id = get_rec_id_if_none(rec_id)
+    except RequestEntityTooLarge as e:
+        # This error is raised as soon as you try to access the request.form if too large
+        flash("The image file you submitted was too large. Maximum size is {} MB".format(request.max_content_length/1048576))
+        return redirect(next)
+    except Exception as e:
+        mes = (f"An unexpected error occured: {str(e)}")
+        printException(mes,level='error',err=e)
+        flash(mes)
+        return redirect(next)
+
     if rec_id < 0:
         flash("Record ID must be greater than 0")
-        return redirect(g.listURL)
-
+        return redirect(next)
+        
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    # import pdb;pdb.set_trace()
+    view.edit_fields = get_edit_field_list(view,**kwargs)
+    view.validate_form = validate_form
     if not view.next:
         view.next = kwargs.get("next")
-        
-    if request.form and view.success:
+    
+    upload = FileUpload() # success is True
+    # if there is already a path set, can't add a new one
+    if request.form and not view.rec.path and view.success:
+        view.update(save_after_update=False)
+        if not view.rec.log_entry_id:
+            flash('No Log Entry ID provided')
+            view.success = False
+        else:
+            upload = save_photo_to_disk(view.rec.log_entry_id,'log_photo')
+            if upload.success:
+                view.rec.path = upload.saved_file_path_string
+
+    if request.form and view.success and upload.success:
         # Update -> Validate -> Save...
         view.update(save_after_update=True)
         if view.success:
@@ -79,6 +109,49 @@ def delete_from_log(rec_id=None):
         return log_photo_list(log_id)
     
     return "<p>Invalid Request</p>"
+
+
+def get_edit_field_list(view,**kwargs) -> list | None:
+    edit_fields = [
+        {'name':'title','type':'text','default':'',},
+        {'name':'caption','type':'text','default':'',},
+    ]
+    if view.rec.path:
+        # display image
+        img_src = url_for('static',filename=view.rec.path)
+        entry_dict = {'name':"log_photo","code":True,"label":None,'content':''}
+        entry_dict["content"] = f"""
+        <div id="log_photo_contain">
+            <img id="log_photo_large" src="{img_src}" style="width:100%;" />
+        </div>
+        """
+        edit_fields.extend([entry_dict])
+    else:
+        edit_fields.extend([
+        {"name":"log_photo","type":"file","label":"Pick a Photo",},
+        ])
+    log_id = view.rec.log_entry_id
+    if not log_id:
+        log_id = kwargs.get("log_id")
+    if not log_id:
+        # display a select list of log entries?
+        log_entries = models.LogEntry(g.db).select()
+        options = []
+        if log_entries:
+            for log in log_entries:
+                options.append({'name':f'{log.location_name}','value':log.id})
+            edit_fields.extend([
+                {"name":"log_entry_id","type":"select",'options':options,'label':'Log Entry'}, 
+            ])
+        else:
+            flash("No Log Entries exist. Create a log entry first.")
+    else:
+        edit_fields.extend(
+            [{'name':'log_entry_id','type':'hidden','default':log_id,},
+            ]
+        )
+
+    return edit_fields
 
 
 @mod.route("/log_photo_list/<int:log_id>",methods=["POST","GET"])
@@ -121,6 +194,37 @@ def validate_form(view):
     goodForm = True
                 
     return goodForm
+
+def save_photo_to_disk(log_id,form_element='image_file'):
+    """ Save an image file if in request.files to disk
+    
+    Args: log_id : int ; The id of the log file to associate with the image
+          form_element : str ; The name of the request.files element containing the image
+    
+    Returns:  upload : FileUpload
+    
+    Raises: None
+    """
+
+    upload = FileUpload(local_path='{}/{}'.format(IMAGE_PATH.rstrip('/'),log_id))
+    file = request.files.get(form_element)
+    if file and file.filename:
+        filename = file.filename
+        x = filename.find('.')
+        if x > 0:
+            upload.save(file,filename=filename,max_size=1000)
+            if not upload.success:
+                flash(upload.error_text)
+                upload.success = False
+        else:
+            # there must be an extenstion
+            flash('The image file must have an extension at the end of the name.')
+            upload.success = False
+    else:
+        # This may not be an error if no file was submitted
+        upload.success = False
+
+    return upload
 
     
 def create_menus():
