@@ -111,7 +111,7 @@ def delete_from_log(rec_id=None):
     return "<p>Invalid Request</p>"
 
 
-def get_edit_field_list(view,**kwargs) -> list | None:
+def get_edit_field_list(view,**kwargs) -> list:
     edit_fields = [
         {'name':'title','type':'text','default':'',},
         {'name':'caption','type':'text','default':'',},
@@ -131,20 +131,20 @@ def get_edit_field_list(view,**kwargs) -> list | None:
         {"name":"log_photo","type":"file","label":"Pick a Photo",},
         ])
     log_id = view.rec.log_entry_id
-    if not log_id:
-        log_id = kwargs.get("log_id")
-    if not log_id:
-        # display a select list of log entries?
-        log_entries = models.LogEntry(g.db).select()
-        options = []
-        if log_entries:
-            for log in log_entries:
-                options.append({'name':f'{log.location_name}','value':log.id})
-            edit_fields.extend([
-                {"name":"log_entry_id","type":"select",'options':options,'label':'Log Entry'}, 
-            ])
-        else:
-            flash("No Log Entries exist. Create a log entry first.")
+    # display a select list of log entries?
+    sql = """
+    select log_entry.*, trip.name as trip_name from log_entry
+    join trip on trip.id = log_entry.trip_id
+    order by trip.id
+    """
+    log_entries = models.LogEntry(g.db).query(sql)
+    options = []
+    if log_entries:
+        for log in log_entries:
+            options.append({'name':f'{log.trip_name}: {log.location_name}','value':log.id})
+        edit_fields.extend([
+            {"name":"log_entry_id","type":"select",'options':options,'label':'Log Entry'}, 
+        ])
     else:
         edit_fields.extend(
             [{'name':'log_entry_id','type':'hidden','default':log_id,},
