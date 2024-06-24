@@ -266,7 +266,8 @@ def edit_log(rec_id=None,trip_id=None):
         rec.trip_id = trip_id if trip_id else get_current_trip_id()
         rec.save() # so images can be attached
         rec_id = rec.id
-    return tl_views.log_entry.edit_log(rec_id,next=url_for(".home"),trip_id=trip_id)
+        g.cancelURL = f"{g.deleteURL.rstrip('/')}/{rec_id}" #Clicking cancel will delete this stub record
+    return tl_views.log_entry.edit_log(rec_id,next=url_for(".home"))
 
 
 @mod.route('log_list/<path:path>',methods=['GET','POST'])
