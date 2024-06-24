@@ -151,6 +151,8 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             prev_log['state_of_charge'] = recs[0].state_of_charge
             rec_num = 0
             for rec in recs:
+                if not rec.location_name:
+                    continue
                 rec_num += 1
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = log['odometer'] - prev_log['odometer']
@@ -249,14 +251,22 @@ def add_log():
     return edit_log(0)
 
 
+@mod.route('edit_log/<int:rec_id>/<int:trip_id>',methods=['GET','POST'])
+@mod.route('edit_log/<int:rec_id>/<int:trip_id>/',methods=['GET','POST'])
 @mod.route('edit_log/<int:rec_id>',methods=['GET','POST'])
 @mod.route('edit_log/<int:rec_id>/',methods=['GET','POST'])
 @mod.route('edit_log/',methods=['GET','POST'])
 @login_required
-def edit_log(rec_id=None):
+def edit_log(rec_id=None,trip_id=None):
     setExits('log')
     rec_id = cleanRecordID(rec_id)
-    return tl_views.log_entry.edit_log(rec_id,next=url_for(".home"),)
+    if not rec_id:
+        # import pdb; pdb.set_trace()
+        rec = models.LogEntry(g.db).new()
+        rec.trip_id = trip_id if trip_id else get_current_trip_id()
+        rec.save() # so images can be attached
+        rec_id = rec.id
+    return tl_views.log_entry.edit_log(rec_id,next=url_for(".home"),trip_id=trip_id)
 
 
 @mod.route('log_list/<path:path>',methods=['GET','POST'])
