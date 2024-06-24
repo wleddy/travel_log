@@ -9,6 +9,7 @@ from shotglass2.takeabeltof.jinja_filters import plural
 from werkzeug.exceptions import RequestEntityTooLarge
 
 import travel_log.models as models
+from travel_log.views import log_photo
 from travel_log.views.travel_log import get_current_trip_id
 
 from datetime import datetime   
@@ -18,7 +19,6 @@ from timezonefinder import TimezoneFinder
 
 PRIMARY_TABLE = models.LogEntry
 MOD_NAME = PRIMARY_TABLE.TABLE_IDENTITY
-IMAGE_PATH = "travel_log/log_entry"
 
 mod = Blueprint(MOD_NAME,__name__, template_folder='templates/travel_log', url_prefix=f'/travel_log/{MOD_NAME}')
 
@@ -71,15 +71,21 @@ def edit_log(rec_id=None,**kwargs):
     # Need to pre-fetch the log record so I can populate the form
     # The record may now include an image so test upload size
     # import pdb;pdb.set_trace()
+    next = kwargs.get('next',g.listURL)
     try:
         rec_id = get_rec_id_if_none(rec_id)
         if rec_id < 0:
             flash("Record ID must be greater than 0")
-            return redirect(g.listURL)
+            return redirect(next)
     except RequestEntityTooLarge as e:
-        # There does not seem to be a way to do anything with request.form if the content exceeds the limit
-        flash("The image file you submitted was too large. Maximum size is {} MB".format(request.max_content_length/2048))
-        return redirect(g.listURL)
+        # This error is raised as soon as you try to access the request.form if too large
+        flash("The image file you submitted was too large. Maximum size is {} MB".format(request.max_content_length/1048576))
+        return redirect(next)
+    except Exception as e:
+        mes = (f"An unexpected error occured: {str(e)}")
+        printException(mes,level='error',err=e)
+        flash(mes)
+        return redirect(next)
     
     rec = None
     table =  PRIMARY_TABLE(g.db)
@@ -106,11 +112,12 @@ def edit_log(rec_id=None,**kwargs):
 
     view.edit_fields = get_edit_field_list(rec)
     if view.edit_fields is None:
-        return redirect(g.listURL)
+        return redirect(next)
 
     # convert the Trip select input to hidden and diaplay the trip name as text
     trip = models.Trip(g.db).get(view.rec.trip_id)
     if trip and view.edit_fields[0]['name'] == 'trip_id':
+        # hide the trip type picker
         view.edit_fields[0]['type'] = 'hidden'
         view.edit_fields.insert(0,{'name':'header','raw':True,'content':f'<h4 class="w3-secondary-color w3-center w3-bar">{trip.name}</h4><hr/>'})
 
@@ -130,7 +137,10 @@ def edit_log(rec_id=None,**kwargs):
         view.update(save_after_update=True)
         if view.success:
             # save the image file if one exists
-            upload = save_image_file(view.rec.id,'log_photo_id')
+            # import pdb;pdb.set_trace()
+            # log_photo module will try to save the file and create an image record
+            # if any errors are encountered it will flash them
+            upload = log_photo.save_photo_to_disk(view.rec.id,'log_photo')
             if upload:
                 images = models.LogPhoto(g.db)
                 image_rec = images.new()
@@ -160,44 +170,14 @@ def delete(view):
                 FileUpload().remove_file(pic.path)
     else:
         view.result_text = 'Not able to delete the Log Entry record.'
- 
-
-def save_image_file(log_id,form_element='image_file'):
-    """ Save an image file if in request.file and return reference to image
-    
-    
-    Args: None
-    
-    Returns:  upload : FileUpload
-    
-    Raises: None
-    """
-
-    upload = None
-    file = request.files.get(form_element)
-    if file and file.filename:
-        upload = FileUpload(local_path='{}/{}'.format(IMAGE_PATH.rstrip('/'),log_id))
-        filename = file.filename
-        x = filename.find('.')
-        if x > 0:
-            upload.save(file,filename=filename,max_size=1000)
-            if upload.success:
-                return upload
-            else:
-                flash(upload.error_text)
-        else:
-            # there must be an extenstion
-            flash('The image file must have an extension at the end of the name.')
-    
-    return upload
 
 
 def validate_form(view):
     # Validate the form
     view._set_edit_fields()
     for field in view.edit_fields:
-        if field['name'] in request.form and field['req']:
-            val = view.rec.__getattribute__(field['name'])
+        if field['location_name'] in request.form and field['req']:
+            val = view.rec.__getattribute__(field['location_name'])
             if isinstance(val,str):
                 val = val.strip()
             if not val:
@@ -411,7 +391,8 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         entry_dict["content"] = """<div id="log_photo_list";></div><p class="clear">&nbsp;</p>"""
         
         edit_fields.extend([entry_dict])
-    edit_fields.extend([{"name":"log_photo_id","type":"file","label":"Pick a Photo",}])
+    edit_fields.extend([{"name":"log_photo","type":"file","label":"Pick a Photo",}])
+    edit_fields.extend([{"name":"add_log_photo","type":"button","label":"Add a Photo",},])
         
     edit_fields.extend(
         [
