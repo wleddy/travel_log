@@ -408,7 +408,9 @@ def edit_car(rec_id=None):
 @mod.route('photos/',methods=['GET','POST'])
 @login_required
 def photos():
-    return request.path
+    setExits()
+    return tl_views.log_photo.list('',next=g.listURL)
+
 
 
 @mod.route('account/',methods=['GET',])
@@ -461,7 +463,7 @@ def create_menus():
             {'title':'Start a new Trip','url':url_for('.add_trip'),},
             ]
         })
-        # g.menu_items.append({'title':'Photos','url':url_for('.photos')})
+        g.menu_items.append({'title':'Photos','url':url_for('.photos')})
         # if session.get('user_has_password'):
         #     g.menu_items.append({'title':'Account','url':url_for('.account')})
         g.menu_items.append({'title':'Log Out','url':url_for('.logout')})
