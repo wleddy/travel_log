@@ -35,6 +35,7 @@
     function set_type(){
         $('#entry_type').val(this.text)
         $('#log_fields').show();
+        $('.form_button_row').show();
         $('#choose_type').hide();
         set_cost_display();
         display_type(this.text);
@@ -70,6 +71,7 @@
     $(document).ready(function(){
         var entry_type = $('#entry_type').val();
         if (entry_type == ''){
+            $('.form_button_row').hide();
             $('#log_fields').hide();
             $('.choose-type').on('click',set_type);
             let d = new Date().toLocaleString()
