@@ -141,12 +141,16 @@ def edit_log(rec_id=None,**kwargs):
             # log_photo module will try to save the file and create an image record
             # if any errors are encountered it will flash them
             upload = log_photo.save_photo_to_disk(view.rec.id,'log_photo')
-            if upload:
+            if upload.success:
                 images = models.LogPhoto(g.db)
                 image_rec = images.new()
                 image_rec.path = upload.saved_file_path_string
                 image_rec.log_entry_id = view.rec.id
                 images.save(image_rec,commit=True)
+
+            #if user clicked "Save and continue", redisplay this form
+            if 'add_log_photo' in request.form:
+                view.next = url_for("travel_log.edit_log") + str(view.rec.id)
 
             if view.next:
                 return redirect(view.next)
@@ -174,17 +178,10 @@ def delete(view):
 
 def validate_form(view):
     # Validate the form
-    view._set_edit_fields()
-    for field in view.edit_fields:
-        if field['location_name'] in request.form and field['req']:
-            val = view.rec.__getattribute__(field['location_name'])
-            if isinstance(val,str):
-                val = val.strip()
-            if not val:
-                view.result_text = "You must enter a value for {}".format(field['name'])
-                flash(view.result_text)
-                view.success = False
-
+    if not view.rec.location_name:
+        flash("You must enter a location name")
+        view.success = False
+        
     if cleanRecordID(view.rec.odometer) < 0:
         flash('The Odometer reading must be a positive number.')
         view.success = False
@@ -391,8 +388,8 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         entry_dict["content"] = """<div id="log_photo_list";></div><p class="clear">&nbsp;</p>"""
         
         edit_fields.extend([entry_dict])
-    edit_fields.extend([{"name":"log_photo","type":"file","label":"Pick a Photo",}])
-    edit_fields.extend([{"name":"add_log_photo","type":"button","label":"Add a Photo",},])
+    edit_fields.extend([{"name":"log_photo","type":"file","label":"Add a photo",}])
+    edit_fields.extend([{"name":"add_log_photo","type":"submit","label":"Save and Continue",'extras':"onclick this.value = 'save'",},])
         
     edit_fields.extend(
         [

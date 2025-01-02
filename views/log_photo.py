@@ -30,13 +30,16 @@ def setExits():
 def display(path=None):
     # import pdb;pdb.set_trace()
     setExits()
-    
+    return list(path)
+
+
+def list(path,**kwargs):
     view = TableView(PRIMARY_TABLE,g.db)
     # optionally specify the list fields
     # view.list_fields = [
     #     ]
     
-    return view.dispatch_request()
+    return view.dispatch_request(**kwargs)
     
 
 ## Edit the PRIMARY_TABLE
@@ -111,25 +114,58 @@ def delete_from_log(rec_id=None):
     return "<p>Invalid Request</p>"
 
 
+def get_embedded_fields() -> str: 
+    """ 
+    Return a HTML string representing fields needed to edit a photo record 
+    from within the log entry form
+    Will be called with render_template_string(rec) with a photo record
+
+    Args: None
+
+    Returns:  str
+
+    Raises: None
+    """
+
+    embedded_fields =   """
+    <div id="embedded_photo_fields" >
+    <p class="form_button_row w3-contain w3-panel" >
+	<input type=submit title="Click to Save" class="{{ base_class }} w3-save-button-color" value='{{ save_value | safe }}' />&nbsp;&nbsp;
+	{% if rec.id and rec.id > 0 and (not no_delete or is_admin) and not g.cancelURL %}
+	<a id="form_delete_link"  class="{{ base_class }} w3-delete-button-color" title="Click to Delete" href = "{{g.deleteURL}}{{rec.id}}/{{ next }}" onclick="return confirmRecordDelete();">{{ delete_value | safe }}</a>&nbsp;&nbsp;
+	{% endif %}
+    <a  class="{{ base_class }} w3-cancel-button-color" title="Click to Cancel" href="{% if g.cancelURL %}{{g.cancelURL}}{{ next }}{% else %}{{ g.listURL }}{{ next }}{% endif %}" >{{ cancel_value | safe }}</a>
+    </p> 
+    <input type="hidden" name="photo_id" id="photo_id" value="{{ rec.id | default(0,True)}}" >
+    <p><label class="w3-block w3-label-color">Title</label></p>
+    <p><input class="w3-input None" type="text" name="title" data-label="Title" id="title"
+        value="{{ rec.title | default('',True)}" 
+        >
+    </p>
+    <p><label class="w3-block w3-label-color">Caption</label></p>
+    <p>
+        <input class="w3-input" type="text" name="caption" data-label="Caption" id="caption"
+        value="{{ rec.caption | default('',True)}}" >
+    </p>
+    <input type="hidden" name="path" id="path" value="{{ rec.path | default('',True)}}" >
+    {% if rec.path %}
+    <div class="photo_contain">
+        {% if rec.path %}{% set filepath=rec.path %}{% else %}{% set filepath = '' %}{% endif %}
+        <img src="{{ url_for('static',filename=f'{rec.path}')}}" name="log_photo_large" id="log_photo_large" alt="a big one" >
+    </div>
+    {% else %}
+    <input type="file" name="log_photo" id="log_photo" style="display:none;">
+    {% endif %}
+    </div>
+    """
+    return embedded_fields
+
+
 def get_edit_field_list(view,**kwargs) -> list:
     edit_fields = [
         {'name':'title','type':'text','default':'',},
         {'name':'caption','type':'text','default':'',},
     ]
-    if view.rec.path:
-        # display image
-        img_src = url_for('static',filename=view.rec.path)
-        entry_dict = {'name':"log_photo","code":True,"label":None,'content':''}
-        entry_dict["content"] = f"""
-        <div id="log_photo_contain">
-            <img id="log_photo_large" src="{img_src}" style="width:100%;" />
-        </div>
-        """
-        edit_fields.extend([entry_dict])
-    else:
-        edit_fields.extend([
-        {"name":"log_photo","type":"file","label":"Pick a Photo",},
-        ])
     log_id = view.rec.log_entry_id
     # display a select list of log entries?
     sql = """
@@ -150,6 +186,21 @@ def get_edit_field_list(view,**kwargs) -> list:
             [{'name':'log_entry_id','type':'hidden','default':log_id,},
             ]
         )
+
+    if view.rec.path:
+        # display image
+        img_src = url_for('static',filename=view.rec.path)
+        entry_dict = {'name':"log_photo","code":True,"label":None,'content':''}
+        entry_dict["content"] = f"""
+        <div id="log_photo_contain">
+            <img src="{img_src}" style="width:100%;" />
+        </div>
+        """
+        edit_fields.extend([entry_dict])
+    else:
+        edit_fields.extend([
+        {"name":"log_photo","type":"file","label":"Pick a Photo",},
+        ])
 
     return edit_fields
 
