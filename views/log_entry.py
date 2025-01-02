@@ -389,7 +389,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         
         edit_fields.extend([entry_dict])
     edit_fields.extend([{"name":"log_photo","type":"file","label":"Add a photo",}])
-    edit_fields.extend([{"name":"add_log_photo","type":"submit","label":"Save and Continue",'extras':"onclick this.value = 'save'",},])
+    edit_fields.extend([{"name":"add_log_photo","type":"submit","label":"Save and Continue",},])
         
     edit_fields.extend(
         [
