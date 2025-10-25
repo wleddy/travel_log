@@ -87,13 +87,44 @@
 <script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 <script>
+    async function setWayPoint(location){
+        // get the location
+        getCurrentLocation()
+
+        if((currentLocError == false) && (currentLat != undefined ) && (currentLng != undefined)){
+            location = {"lat":currentLat,"lng":currentLng,"trip_id":globalTripID}
+
+            // send it to the server
+            const query = await fetch(
+            `{{config["HOST_PROTOCOL"]}}//{{config["HOST_NAME"]}}/travel_log/log_entry/log_waypoint/`+ JSON.stringify(location),
+            { method: 'GET' }
+            );
+            const response = await query;
+            //alert(response);
+        }
+
+    }
+    let waypointer = setInterval(setWayPoint,60000);
+
+    let globalCoords;
+    let globalTripID = 1;
+
     function show_more(which) {
         $("#" + which + " span").toggle(500)
     }
+    function onMapClick(e) {
+        // alert("You clicked the map at " + e.lngLat.lng + "," + e.lngLat.lat);
+        marker = add_marker(map,e.lngLat.lng,e.lngLat.lat);
+        setWayPoint({"lat":e.lngLat.lat,"lng":e.lngLat.lng,"trip_id":globalTripID})
+        globalCoords.splice(1,0, [e.lngLat.lng,e.lngLat.lat])
+        //updateRoute(globalCoords)
+    }
+
 
     function create_map() {
         map = make_map("map",map_center);
         map.dragRotate.disable();
+        map.on('click', onMapClick);
         $('#map').show();
     }
     // coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
@@ -105,18 +136,23 @@
                 marker.addClassName('marker-POI');
             } else if (point.properties.entry_type == 'ARR'){
                 marker.addClassName('marker-ARR');
+            } else if (point.properties.entry_type == 'DEP'){
+                marker.addClassName('marker-DEP')
+            } else {
+                marker.addClassName("marker-WAY");
             }
         }
         // fit the map to the markers
         map.fitBounds(map_bounds);
-
     }
+
+
     function get_map_bounds(coords) {
         const nudge = .025; // how much space at edges
         // get the ne most and se most points
         let _ne =[-180,-90];
         let _sw = [180,90];
-        for (var loc of coords.match_path){
+        for (var loc of globalCoords){
             if(loc[0]>_ne[0]){_ne[0]=loc[0];}
             if(loc[1]>_ne[1]){_ne[1]=loc[1];}
             if(loc[0]<_sw[0]){_sw[0]=loc[0];}
@@ -140,12 +176,12 @@
         removeRoute(); // Overwrite any existing layers
 
         const profile = 'driving'; // Set the profile
+         // Set the radius for each coordinate pair to 25 meters
+        const radius = globalCoords.map(() => 50);
         // Format the coordinates
-        const newCoords = coords.join(';');
-        // Set the radius for each coordinate pair to 25 meters
-        const radius = coords.map(() => 15);
+        newCoords = globalCoords.join(';');
         // matching only seems to work for very short distances for me...
-        //getMatch(newCoords, radius, profile);
+        getMatch(newCoords, radius, profile);
       }
 
       // Make a Map Matching request
@@ -154,29 +190,35 @@
         const radiuses = radius.join(';');
         // Create the query
         const query = await fetch(
-          `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=true&access_token=${mapboxgl.accessToken}`,
+          `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=false&access_token=${mapboxgl.accessToken}`,
           { method: 'GET' }
         );
         const response = await query.json();
         // Handle errors
         if (response.code !== 'Ok') {
-          alert(
-            `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
-          );
+            if(response.message !== "All coordinates are too far away from each other")
+            {
+            alert(
+                `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+            );
+            }
           return;
+        } else {
+            // Draw the route on the map
+            addRoute(response.matchings[0].geometry);
         }
-        const coords = response.matchings[0].geometry;
-        // Draw the route on the map
-        addRoute(coords);
+
       }
 
       // Draw the Map Matching route as a new layer on the map
       function addRoute(coords) {
         // If a route is already loaded, remove it
+        /*
         if (map.getSource('route')) {
           map.removeLayer('route');
           map.removeSource('route');
         } else {
+         */
           map.addLayer({
             'id': 'route',
             'type': 'line',
@@ -199,7 +241,7 @@
             }
           });
         }
-      }
+      //}
 
       // If the user clicks the delete draw button, remove the layer if it exists
       function removeRoute() {
@@ -207,17 +249,45 @@
         map.removeLayer('route');
         map.removeSource('route');
       }
+   
+
+    function getCurrentLocation () {
+        const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+        };
+        navigator.geolocation.getCurrentPosition( function (position) {
+            //use coordinates
+            currentLat = position.coords.latitude;
+            currentLng = position.coords.longitude;
+            currentLocError = false       
+        }, function (error) {
+            console.error(error);
+            currentLocError = true
+        }, options)
+    }
+        
+
     var map;
     var marker;
     var map_bounds;
     var map_center;
+    let currentLat, currentLng, currentLocError;
+    currentLocError = false;
+
     $(document).ready(function (){
         var coords = {{ data.coords | safe }};
+        globalCoords = [];
+        for (const point of coords.points){
+            globalCoords.push(point.geometry.coordinates)
+        }
+        globalTripID = coords.points[0].properties.trip_id
         map_bounds = get_map_bounds(coords);
         map_center = map_bounds.getCenter()
         create_map(map_center);
         // match the route to the roads
-        //updateRoute(coords.match_path);
+        updateRoute(coords);
         set_markers(coords);
         //const z = map.getZoom();
         //map.setZoom(z-1);
@@ -265,6 +335,7 @@
             </div>
         <div id="home-trip-list" >
         {% for rec in data.log_entries %}
+            {% if rec.entry_type != "WAY" %}
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
                     <div class="log_title_row w3-row w3-row-padding w3-secondary-color" >
                         <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
@@ -285,6 +356,7 @@
                         </div>
                     </div>
                    {% endif %}
+                {% endif %}
             {% endfor %}
             </div>
             <div id="map" class="map"></div>

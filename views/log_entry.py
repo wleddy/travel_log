@@ -1,5 +1,7 @@
 from flask import request, session, g, redirect, url_for, \
      render_template, flash, Blueprint
+import json
+from shotglass2.mapping.views.maps import get_distance
 from shotglass2.takeabeltof.file_upload import FileUpload
 from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
@@ -208,6 +210,67 @@ def validate_form(view):
 
     return view.success
 
+
+@mod.route('/log_waypoint/<data>/', methods=['GET'])
+@table_access_required(PRIMARY_TABLE)
+def log_waypoint(data=""):
+    """ Record a waypoint.
+    
+    The idea is that the web page will periodically emit a request to record the
+    current location lngLat to be used for MapBox rounting display
+    
+    Args: data: str; a JSON string containing the data needed to record the waypoint
+    
+    Returns:  str: Always returns "OK"
+    
+    Raises: None
+    """
+    # import pdb;pdb.set_trace()
+    try:
+        data = json.loads(data)
+        sql = """
+            'location_name' TEXT,
+            'entry_type' TEXT,
+            'entry_date' DATETIME,
+            'entry_UTC_date' DATETIME,
+            'memo' TEXT,
+            'lat' REAL,
+            'lng' REAL,
+            'odometer' INT,
+            'state_of_charge' INT,
+            'cost' REAL,
+            'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
+            """
+        
+        if data["trip_id"] and data["lat"] and data["lng"]:
+            entry = models.LogEntry(g.db)
+            new_rec = entry.new()
+            # get the last point recorded
+            last_rec = entry.select_one(where=f"trip_id = {data['trip_id']}", order_by="id DESC")
+            
+            if 'location_name' not in data:
+                new_rec.location_name = "Waypoint"
+            if "entry_type" not in data:
+                new_rec.entry_type = "WAY"
+            if "entry_date" not in data:
+                new_rec.entry_date = local_datetime_now()
+
+            new_rec.update(data)
+            if last_rec:
+                # measure the distance
+                dist = get_distance({"lat":last_rec.lat,"lng":last_rec.lng},{"lat":new_rec.lat,"lng":new_rec.lng})
+                if dist > 1.0:
+                    new_rec.save()
+                else:
+                    g.db.rollback()
+
+    except Exception as e:
+        print(str(e))
+    finally:
+        pass
+
+    return "OK"
+    
     
 def create_menus():
     """

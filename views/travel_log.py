@@ -174,12 +174,21 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
 
                 # Create data to populate map
                 # coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
-                data['coords']["points"].append({"geometry":{"coordinates":[log["lng"],log["lat"]]},"properties":{"title":log['location_name'],"entry_type":log["entry_type"][:3].upper()}})
-                data['coords']["match_path"].append([log["lng"],log["lat"]])
+                data['coords']["points"].append(
+                    {"geometry":{"coordinates":[log["lng"],log["lat"]]},
+                     "properties":{
+                        "trip_id":log['trip_id'],
+                        "title":log['location_name'],
+                        "entry_type":log["entry_type"][:3].upper()
+                        }
+                    }
+                )
+                # data['coords']["match_path"].append([log["lng"],log["lat"]])
                                         
 
         data['trip_consumption'] = trip_consumption
         data['coords'] = json.dumps(data['coords'])
+
 
 @mod.route('/<path:path>>',methods=['GET',])
 @mod.route('/',methods=['GET',])

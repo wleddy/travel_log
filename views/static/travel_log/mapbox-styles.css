@@ -26,6 +26,14 @@
   .marker-POI {
     background-image: url('/static/travel_log/images/car_logo_green.png') !important;
   }
+  .marker-WAY {
+    background-image:none !important;
+    background-color: white;
+    border:solid .5pt green;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
   .mapboxgl-popup {
     max-width: 200px;
   }
