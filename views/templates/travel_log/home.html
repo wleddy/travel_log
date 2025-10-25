@@ -96,7 +96,7 @@
 
             // send it to the server
             const query = await fetch(
-            `{{config["HOST_PROTOCOL"]}}//{{config["HOST_NAME"]}}/travel_log/log_entry/log_waypoint/`+ JSON.stringify(location),
+            `{{config["HOST_PROTOCOL"]}}://{{config["HOST_NAME"]}}/travel_log/log_entry/log_waypoint/`+ JSON.stringify(location),
             { method: 'GET' }
             );
             const response = await query;
@@ -250,6 +250,12 @@
         map.removeSource('route');
       }
    
+    function _setCurrentLoc(position){
+        //use coordinates
+        currentLat = position.coords.latitude;
+        currentLng = position.coords.longitude;
+        currentLocError = false     
+    }
 
     function getCurrentLocation () {
         const options = {
@@ -257,12 +263,12 @@
                 timeout: 5000,
                 maximumAge: 0
         };
-        navigator.geolocation.getCurrentPosition( function (position) {
-            //use coordinates
+        navigator.geolocation.getCurrentPosition( function(position){
             currentLat = position.coords.latitude;
             currentLng = position.coords.longitude;
-            currentLocError = false       
-        }, function (error) {
+            currentLocError = false    
+        },
+         function (error) {
             console.error(error);
             currentLocError = true
         }, options)
@@ -289,8 +295,7 @@
         // match the route to the roads
         updateRoute(coords);
         set_markers(coords);
-        //const z = map.getZoom();
-        //map.setZoom(z-1);
+        setWayPoint()
     })
 </script>
 
