@@ -5,7 +5,7 @@ from shotglass2.mapping.views.maps import get_distance
 from shotglass2.takeabeltof.file_upload import FileUpload
 from shotglass2.takeabeltof.utils import printException, cleanRecordID, is_mobile_device, get_rec_id_if_none
 from shotglass2.users.admin import login_required, table_access_required
-from shotglass2.takeabeltof.date_utils import date_to_string, local_datetime_now
+from shotglass2.takeabeltof.date_utils import date_to_string, local_datetime_now, getDatetimeFromString
 from shotglass2.takeabeltof.views import TableView, EditView
 from shotglass2.takeabeltof.jinja_filters import plural
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -14,7 +14,7 @@ import travel_log.models as models
 from travel_log.views import log_photo
 from travel_log.views.travel_log import get_current_trip_id
 
-from datetime import datetime   
+from datetime import datetime, timedelta
 import pytz
 from timezonefinder import TimezoneFinder 
 
@@ -246,7 +246,7 @@ def log_waypoint(data=""):
             entry = models.LogEntry(g.db)
             new_rec = entry.new()
             # get the last point recorded
-            last_rec = entry.select_one(where=f"trip_id = {data['trip_id']}", order_by="id DESC")
+            last_rec = entry.select_one(where=f"trip_id = {data['trip_id']}", order_by="entry_UTC_date DESC")
             
             if 'location_name' not in data:
                 new_rec.location_name = "Waypoint"
@@ -256,11 +256,27 @@ def log_waypoint(data=""):
                 new_rec.entry_date = local_datetime_now()
 
             new_rec.update(data)
+            ok_to_save = True
             if last_rec:
                 # measure the distance
                 dist = get_distance({"lat":last_rec.lat,"lng":last_rec.lng},{"lat":new_rec.lat,"lng":new_rec.lng})
-                if dist > 1.0:
+                print(f"Distance: {dist}mi.")
+                if dist < 0.25:
+                    # to close to last
+                    ok_to_save = False
+                    print("too close")
+
+                # import pdb;pdb.set_trace()
+                newDate = getDatetimeFromString(new_rec.entry_UTC_date)
+                oldDate = getDatetimeFromString(last_rec.entry_UTC_date)
+                if newDate > oldDate + timedelta(minutes=120):
+                    # its longer than 2 hours since last entry
+                    ok_to_save = False
+                    print("Too soon")
+
+                if ok_to_save:
                     new_rec.save()
+                    print(f"Waypoint {new_rec.id} Created",data['lng'],data["lat"])
                 else:
                     g.db.rollback()
 
