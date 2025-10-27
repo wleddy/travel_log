@@ -308,7 +308,15 @@
             <p><a class="w3-btn w3-circle w3-xlarge w3-primary-color " href="{{ url_for('.add_log')}}" ><strong>&plus;</strong></a></p>
         </div>
         <div id="trip-list-contain" >
-            <h3 id="trip_name" class="w3-primary-color"  title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">{{data.trip.name}}</h3>
+            <h3 id="trip_name" class="w3-primary-color"  
+                title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}
+                {{data.trip.id}}/?next={{ g.listURL }}'">
+                {{data.trip.name}}
+                {% if data.log_entries %}
+                    <span class="w3-hide-small">&nbsp;&nbsp;&mdash;&nbsp;&nbsp;{{data.log_entries[0].entry_date | abbr_date_string }}</span>
+                    <span class="w3-hide-medium w3-hide-large"><br>{{data.log_entries[0].entry_date | abbr_date_string }}</span>
+                {% endif %}
+            </h3>
             {% if data.log_entries %}
             <div id="trip_stats_left" >
                 <p><strong>Car: </strong>{{ data.log_entries[0].vehicle_name | default('??',True)}}</p>
