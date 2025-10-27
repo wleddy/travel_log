@@ -87,23 +87,23 @@
 <script src="{{ url_for('static', filename='travel_log/mapbox.js') }}"></script>
 
 <script>
-    async function setWayPoint(location){
-        if((currentLocError == false) && (currentLat != undefined ) && (currentLng != undefined)){
-            location = {"lat":currentLat,"lng":currentLng,"trip_id":globalTripID}
-
-            // send it to the server
-            const query = await fetch(
-            `{{config["HOST_PROTOCOL"]}}://{{config["HOST_NAME"]}}/travel_log/log_entry/log_waypoint/`+ JSON.stringify(location),
-            { method: 'GET' }
-            );
-            const response = await query;
-            //alert(response);
-        }
-
-    }
-    function waypointHandler(){
-        setWayPoint();
-    }
+    //async function setWayPoint(location){
+    //    if((currentLocError == false) && (currentLat != undefined ) && (currentLng != undefined)){
+    //        location = {"lat":currentLat,"lng":currentLng,"trip_id":globalTripID}
+//
+    //        // send it to the server
+    //        const query = await fetch(
+    //        `{{config["HOST_PROTOCOL"]}}://{{config["HOST_NAME"]}}/travel_log/log_entry/log_waypoint/`+ JSON.stringify(location),
+    //        { method: 'GET' }
+    //        );
+    //        const response = await query;
+    //        //alert(response);
+    //    }
+//
+    //}
+    //function waypointHandler(){
+    //    setWayPoint();
+    //}
 
     //let waypointer = setInterval(waypointHandler,60000);
 
@@ -173,115 +173,97 @@
     }
 
 
-    function updateRoute(coords) {
-        removeRoute(); // Overwrite any existing layers
+    //function updateRoute(coords) {
+    //    removeRoute(); // Overwrite any existing layers
+//
+    //    const profile = 'driving'; // Set the profile
+    //     // Set the radius for each coordinate pair to 25 meters
+    //    const radius = globalCoords.map(() => 50);
+    //    // Format the coordinates
+    //    newCoords = globalCoords.join(';');
+    //    // matching only seems to work for very short distances for me...
+    //    getMatch(newCoords, radius, profile);
+    //  }
 
-        const profile = 'driving'; // Set the profile
-         // Set the radius for each coordinate pair to 25 meters
-        const radius = globalCoords.map(() => 50);
-        // Format the coordinates
-        newCoords = globalCoords.join(';');
-        // matching only seems to work for very short distances for me...
-        getMatch(newCoords, radius, profile);
-      }
+     // // Make a Map Matching request
+     // async function getMatch(coordinates, radius, profile) {
+     //   // Separate the radiuses with semicolons
+     //   const radiuses = radius.join(';');
+     //   // Create the query
+     //   const query = await fetch(
+     //     `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=false&access_token=${mapboxgl.accessToken}`,
+     //     { method: 'GET' }
+     //   );
+     //   const response = await query.json();
+     //   // Handle errors
+     //   if (response.code !== 'Ok') {
+     //       if(response.message !== "All coordinates are too far away from each other")
+     //       {
+     //       alert(
+     //           `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+     //       );
+     //       }
+     //     return;
+     //   } else {
+     //       // Draw the route on the map
+     //       addRoute(response.matchings[0].geometry);
+     //   }
+//
+     // }
 
-      // Make a Map Matching request
-      async function getMatch(coordinates, radius, profile) {
-        // Separate the radiuses with semicolons
-        const radiuses = radius.join(';');
-        // Create the query
-        const query = await fetch(
-          `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=false&access_token=${mapboxgl.accessToken}`,
-          { method: 'GET' }
-        );
-        const response = await query.json();
-        // Handle errors
-        if (response.code !== 'Ok') {
-            if(response.message !== "All coordinates are too far away from each other")
-            {
-            alert(
-                `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
-            );
-            }
-          return;
-        } else {
-            // Draw the route on the map
-            addRoute(response.matchings[0].geometry);
-        }
-
-      }
-
-      // Draw the Map Matching route as a new layer on the map
-      function addRoute(coords) {
-        // If a route is already loaded, remove it
-        /*
-        if (map.getSource('route')) {
-          map.removeLayer('route');
-          map.removeSource('route');
-        } else {
-         */
-          map.addLayer({
-            'id': 'route',
-            'type': 'line',
-            'source': {
-              'type': 'geojson',
-              'data': {
-                'type': 'Feature',
-                'properties': {},
-                'geometry': coords
-              }
-            },
-            'layout': {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            'paint': {
-              'line-color': '#03AA46',
-              'line-width': 8,
-              'line-opacity': 0.8
-            }
-          });
-        }
-      //}
-
-      // If the user clicks the delete draw button, remove the layer if it exists
-      function removeRoute() {
-        if (!map.getSource('route')) return;
-        map.removeLayer('route');
-        map.removeSource('route');
-      }
+    //  // Draw the Map Matching route as a new layer on the map
+    //  function addRoute(coords) {
+    //    // If a route is already loaded, remove it
+    //    /*
+    //    if (map.getSource('route')) {
+    //      map.removeLayer('route');
+    //      map.removeSource('route');
+    //    } else {
+    //     */
+    //      map.addLayer({
+    //        'id': 'route',
+    //        'type': 'line',
+    //        'source': {
+    //          'type': 'geojson',
+    //          'data': {
+    //            'type': 'Feature',
+    //            'properties': {},
+    //            'geometry': coords
+    //          }
+    //        },
+    //        'layout': {
+    //          'line-join': 'round',
+    //          'line-cap': 'round'
+    //        },
+    //        'paint': {
+    //          'line-color': '#03AA46',
+    //          'line-width': 8,
+    //          'line-opacity': 0.8
+    //        }
+    //      });
+    //    }
+    //  //}
+//
+    //  // If the user clicks the delete draw button, remove the layer if it exists
+    //  function removeRoute() {
+    //    if (!map.getSource('route')) return;
+    //    map.removeLayer('route');
+    //    map.removeSource('route');
+    //  }
    
-    function _setCurrentLoc(position){
-        //use coordinates
-        currentLat = position.coords.latitude;
-        currentLng = position.coords.longitude;
-        currentLocError = false
-        $('#geoLng').html(currentLng);
-        $('#geoLat').html(currentLat);
-        setWayPoint();
-    }
-
-    const geoWatchID = navigator.geolocation.watchPosition((position) => {
-        _setCurrentLoc(position);
-    });
-
-    function getCurrentLocation () {
-        const options = {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-        };
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition( _setCurrentLoc,
-         function (error) {
-            console.error(error);
-            currentLocError = true
-        }, options)
-        } else {
-            console.log("Geolocation is not supported by this browser.");
-        }
-    }
-
+    //function _setCurrentLoc(position){
+    //    //use coordinates
+    //    currentLat = position.coords.latitude;
+    //    currentLng = position.coords.longitude;
+    //    currentLocError = false
+    //    $('#geoLng').html(currentLng);
+    //    $('#geoLat').html(currentLat);
+    //    setWayPoint();
+    //}
+//
+    //const geoWatchID = navigator.geolocation.watchPosition((position) => {
+    //    _setCurrentLoc(position);
+    //});
 
     var map;
     var marker;
@@ -301,10 +283,7 @@
         map_center = map_bounds.getCenter()
         create_map(map_center);
         // match the route to the roads
-        updateRoute(coords);
         set_markers(coords);
-        //getCurrentLocation();
-        setWayPoint();
     })
 </script>
 
@@ -373,6 +352,7 @@
                 {% endif %}
             {% endfor %}
             </div>
+            <!--
             <div id="loc" class="w3-row w3-row-padding">
                 <p class="w3-col m3 l3 s6">Current Longitude</p>
                 <p id="geoLng" class="w3-col m3 l3 s6">Unknown</p>
@@ -381,6 +361,7 @@
                 <p class="w3-col m3 l3 s6">Current Latitude</p>
                 <p id="geoLat" class="w3-col m3 l3 s6">Unknown</p>
             </div>
+            -->
             <div id="map" class="map"></div>
             
         </div>
