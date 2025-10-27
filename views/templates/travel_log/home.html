@@ -88,9 +88,6 @@
 
 <script>
     async function setWayPoint(location){
-        // get the location
-        getCurrentLocation()
-
         if((currentLocError == false) && (currentLat != undefined ) && (currentLng != undefined)){
             location = {"lat":currentLat,"lng":currentLng,"trip_id":globalTripID}
 
@@ -104,7 +101,11 @@
         }
 
     }
-    let waypointer = setInterval(setWayPoint,60000);
+    function waypointHandler(){
+        setWayPoint();
+    }
+
+    //let waypointer = setInterval(waypointHandler,60000);
 
     let globalCoords;
     let globalTripID = 1;
@@ -114,10 +115,10 @@
     }
     function onMapClick(e) {
         // alert("You clicked the map at " + e.lngLat.lng + "," + e.lngLat.lat);
-        marker = add_marker(map,e.lngLat.lng,e.lngLat.lat);
-        setWayPoint({"lat":e.lngLat.lat,"lng":e.lngLat.lng,"trip_id":globalTripID})
-        globalCoords.splice(1,0, [e.lngLat.lng,e.lngLat.lat])
-        //updateRoute(globalCoords)
+        //marker = add_marker(map,e.lngLat.lng,e.lngLat.lat);
+        //setWayPoint({"lat":e.lngLat.lat,"lng":e.lngLat.lng,"trip_id":globalTripID})
+        //globalCoords.splice(1,0, [e.lngLat.lng,e.lngLat.lat])
+        ////updateRoute(globalCoords)
     }
 
 
@@ -254,8 +255,15 @@
         //use coordinates
         currentLat = position.coords.latitude;
         currentLng = position.coords.longitude;
-        currentLocError = false     
+        currentLocError = false
+        $('#geoLng').html(currentLng);
+        $('#geoLat').html(currentLat);
+        setWayPoint();
     }
+
+    const geoWatchID = navigator.geolocation.watchPosition((position) => {
+        _setCurrentLoc(position);
+    });
 
     function getCurrentLocation () {
         const options = {
@@ -263,17 +271,17 @@
                 timeout: 5000,
                 maximumAge: 0
         };
-        navigator.geolocation.getCurrentPosition( function(position){
-            currentLat = position.coords.latitude;
-            currentLng = position.coords.longitude;
-            currentLocError = false    
-        },
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition( _setCurrentLoc,
          function (error) {
             console.error(error);
             currentLocError = true
         }, options)
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+        }
     }
-        
+
 
     var map;
     var marker;
@@ -295,7 +303,8 @@
         // match the route to the roads
         updateRoute(coords);
         set_markers(coords);
-        setWayPoint()
+        //getCurrentLocation();
+        setWayPoint();
     })
 </script>
 
@@ -363,6 +372,14 @@
                    {% endif %}
                 {% endif %}
             {% endfor %}
+            </div>
+            <div id="loc" class="w3-row w3-row-padding">
+                <p class="w3-col m3 l3 s6">Current Longitude</p>
+                <p id="geoLng" class="w3-col m3 l3 s6">Unknown</p>
+            </div>
+            <div id="loc" class="w3-row w3-row-padding">
+                <p class="w3-col m3 l3 s6">Current Latitude</p>
+                <p id="geoLat" class="w3-col m3 l3 s6">Unknown</p>
             </div>
             <div id="map" class="map"></div>
             
