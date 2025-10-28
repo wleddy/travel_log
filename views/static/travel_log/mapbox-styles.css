@@ -8,42 +8,112 @@
     height:200px;
   }
 }
-  .marker, maker-DEP .marker-ARR,.marker-POI{
-    background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
-    background-size:contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-color: rgba(255,255,255,.5);
-    border:solid .5pt #666;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+.marker, maker-DEP .marker-ARR,.marker-POI{
+  background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
+  background-size:contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: rgba(255,255,255,.5);
+  border:solid .5pt #666;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.marker-ARR {
+    background-image: url('/static/travel_log/images/car_logo_red.png') !important;
+}
+.marker-POI {
+  background-image: url('/static/travel_log/images/car_logo_green.png') !important;
+}
+.marker-WAY {
+  background-image:none !important;
+  background-color: white;
+  border:solid .5pt green;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+  color:black;
+  background-color:white;
+}
+
+/* From home... */
+
+#log-body-contain h2, #log-body-contain h3{
+  text-align: center;
+}
+
+#trip_name {
     cursor: pointer;
-  }
-  .marker-ARR {
-      background-image: url('/static/travel_log/images/car_logo_red.png') !important;
-  }
-  .marker-POI {
-    background-image: url('/static/travel_log/images/car_logo_green.png') !important;
-  }
-  .marker-WAY {
-    background-image:none !important;
-    background-color: white;
-    border:solid .5pt green;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-  .mapboxgl-popup {
-    max-width: 200px;
-  }
-  
-  .mapboxgl-popup-content {
+}
+#login-section {
     text-align: center;
-    font-family: 'Open Sans', sans-serif;
-    color:black;
-    background-color:white;
-  }
+}
+p#login {
+    border:4pt solid skyblue;
+}
+p#login a{
+    padding: 3pt 20pt;
+}
+#new-account {
+    margin-top: 12pt;
+}
+#log-body-contain {
+    width:90%;
+    max-width:500pt;
+    margin: auto;
+}
+div.log_title_row {
+    margin-top:2pt;
+}
+
+.log_title_row h4, .log_title_row p {
+    margin:3pt 0 0 0;
+    border-top: black 2pt solid;
+}
+
+#home-trip-list {
+    cursor: pointer;
+}
+
+.home-trip-head {
+    font-weight: bold;
+}
+.memo {
+    margin: 2pt 10pt;
+    background-color:lightcyan;
+}
+.no_log, .no_trip {
+    margin-top:6pt !important;
+}
+.more span:first-child {
+    display:block;
+    color:purple;
+    font-weight: bold;
+}
+.more span:nth-child(2) {
+    display:none;
+}
+#new_log_button {
+    position:relative;
+    top:-10pt;
+text-align: right;
+}
+#trip_stats_left {
+    float:left;
+}
+#trip_stats_right {
+    text-align: right;
+}
+
   @media (prefers-color-scheme: dark) {
     .mapboxgl-popup-content {
       background-color:black;
@@ -51,5 +121,12 @@
     }
     .mapboxgl-popup-close-button {
       color:white;
+    }
+    .memo {
+        background-color: rgb(74, 112, 209);
+        color:white
+    }
+    .more span:first-child {
+        color:rgb(180, 189, 236);
     }
   }
