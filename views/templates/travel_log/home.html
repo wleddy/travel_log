@@ -18,7 +18,7 @@
         globalTripID = coords.points[0].properties.trip_id
         map_bounds = get_map_bounds(coords);
         map_center = map_bounds.getCenter()
-        create_map(map_center);
+        create_trip_map(map_center);
         // match the route to the roads
         set_markers(coords);
     })
