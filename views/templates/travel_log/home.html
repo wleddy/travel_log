@@ -16,7 +16,9 @@
             tripCoords.push(point.geometry.coordinates)
         }
         //globalTripID = coords.points[0].properties.trip_id
+        {% if 'trip' in data %}
         globalTripID = {{ data["trip"].id }}
+        {% endif %}
         map_bounds = get_map_bounds(coords);
         map_center = map_bounds.getCenter()
         create_trip_map(map_center);
