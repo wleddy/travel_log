@@ -60,6 +60,9 @@
             map = create_log_entry_map("map");
             map.dragRotate.disable();
             marker = add_marker(map,$('#lng').val(),$('#lat').val(),$('#location_name').val())
+            if($('#entry_type').val() == 'Charging Stop'){
+                marker.addClassName('marker-CHA');
+            }
             marker.setDraggable(true).on('dragend', onDragEnd);
 
         }else{
