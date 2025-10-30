@@ -9,7 +9,7 @@
   }
 }
 .marker, .maker-DEP, .marker-ARR,.marker-POI{
-  background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
+  background-image: url('/static/travel_log/images/car_logo_green.png') !important;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 40px 20px;
@@ -26,7 +26,7 @@
     background-image: url('/static/travel_log/images/car_logo_red.png') !important;
 }
 .marker-POI {
-  background-image: url('/static/travel_log/images/car_logo_green.png') !important;
+  background-image: url('/static/travel_log/images/car_logo_blue.png') !important;
 }
 .marker-CHA {
   background-image: url('/static/travel_log/images/charger.png') !important;
