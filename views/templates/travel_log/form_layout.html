@@ -37,14 +37,20 @@
         $('#log_fields').show();
         $('.form_button_row').show();
         $('#choose_type').hide();
-        set_cost_display();
+        set_charging_display();
         display_type(this.text);
         set_map_display();
     }
-    function set_cost_display(){
-        $('#cost-container').show();
-        if($('#entry_type').val() != 'Departure'){
-            $('#cost-container').hide();
+    function set_charging_display(){
+        $('.charge-stop').hide();
+        if($('#entry_type').val() == 'Charging Stop'){
+            $('.charge-stop').show();
+        }
+        if($('#entry_type').val() == 'Departure'){
+            $('#departure-container').show();
+        }
+        if($('#entry_type').val() == 'Arrival'){
+            $('#arrival-container').show();
         }
     }
     function set_map_display(){
@@ -79,7 +85,7 @@
         }else{
             $('#choose_type').hide();
         }
-        set_cost_display();
+        set_charging_display();
         display_type(entry_type);
         // load photos if any
         if ($('#log_photo_list').length){

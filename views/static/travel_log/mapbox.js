@@ -50,13 +50,13 @@ function add_marker(map,lng,lat,html=''){
 // ---------------- From Home script -----------------------------------
 
 
-let globalCoords;
-let globalTripID = 1;
+var tripCoords = [];
+var globalTripID = 1;
 var map;
 var marker;
 var map_bounds;
 var map_center;
-let currentLat, currentLng, currentLocError;
+var currentLat, currentLng, currentLocError;
 currentLocError = false;
 
 function show_more(which) {
@@ -80,8 +80,8 @@ function set_markers(coords){
             marker.addClassName('marker-ARR');
         } else if (point.properties.entry_type == 'DEP'){
             marker.addClassName('marker-DEP')
-        } else {
-            marker.addClassName("marker-WAY");
+        } else if (point.properties.entry_type == 'CHA'){
+            marker.addClassName('marker-CHA')
         }
     }
     // fit the map to the markers
@@ -94,7 +94,7 @@ function get_map_bounds(coords) {
     // get the ne most and se most points
     let _ne =[-180,-90];
     let _sw = [180,90];
-    for (var loc of globalCoords){
+    for (var loc of tripCoords){
         if(loc[0]>_ne[0]){_ne[0]=loc[0];}
         if(loc[1]>_ne[1]){_ne[1]=loc[1];}
         if(loc[0]<_sw[0]){_sw[0]=loc[0];}

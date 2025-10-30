@@ -88,9 +88,9 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 select 
                 CAST (coalesce(min(odometer),0) AS INTEGER) as trip_starting, 
                 CAST (coalesce(max(odometer),0) AS INTEGER) as trip_ending,
-                CAST (sum(coalesce(state_of_charge,0)) AS INTEGER) as trip_arrival_fuel_level,
-                CAST (sum(coalesce(state_of_charge,0)) AS INTEGER) -
-                    (SELECT CAST(coalesce(state_of_charge,0) AS INTEGER) from log_entry 
+                CAST (sum(coalesce(departure_state_of_charge,0)) AS INTEGER) as trip_arrival_fuel_level,
+                CAST (sum(coalesce(departure_state_of_charge,0)) AS INTEGER) -
+                    (SELECT CAST(coalesce(departure_state_of_charge,0) AS INTEGER) from log_entry 
                     where trip_id = {trip_id} order by entry_date DESC limit 1) 
                     as trip_departure_fuel_level,
                 CAST (sum(coalesce(cost,0)) AS REAL) as trip_fuel_cost,
@@ -125,12 +125,13 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             memo, 
             CAST (coalesce(lng,0) AS REAL) as lng,
             CAST (coalesce(lat,0) AS REAL) as lat,
-            CAST (coalesce(state_of_charge,0) AS INTEGER) as state_of_charge, 
+            CAST (coalesce(departure_state_of_charge,0) AS INTEGER) as departure_state_of_charge, 
             CAST (coalesce(cost,0) AS REAL) as cost, 
             vehicle.name as vehicle_name, 
             CAST (coalesce(vehicle.fuel_capacity,0) AS INTEGER) as fuel_capacity,
             vehicle.fuel_type as fuel_type,
-            trip.battery_health as trip_battery_health
+            trip.battery_health as trip_battery_health,
+            coalesce((select count(id) from log_photo where log_photo.log_entry_id == log_entry.id),0) as photo_count
             from log_entry 
             join trip on log_entry.trip_id = trip.id
             join vehicle on trip.vehicle_id = vehicle.id
@@ -142,14 +143,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
         trip_consumption = 0
         prev_log = {
             'odometer':0,
-            'state_of_charge':0,
+            'departure_state_of_charge':0,
         }
-        data['coords'] = {'points':[],'match_path':[]}
+        data['coords'] = {'points':[],}
         if recs:        
             # import pdb;pdb.set_trace()
             # Start of trip values...
             prev_log['odometer'] = recs[0].odometer 
-            prev_log['state_of_charge'] = recs[0].state_of_charge
+            prev_log['departure_state_of_charge'] = recs[0].departure_state_of_charge
             rec_num = 0
             for rec in recs:
                 if not rec.location_name:
@@ -158,10 +159,10 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = log['odometer'] - prev_log['odometer']
                 log['consumption'] = 0
-                if log['state_of_charge'] < prev_log["state_of_charge"]:
-                    log['consumption'] = (prev_log["state_of_charge"] - log["state_of_charge"])/100 * (log["fuel_capacity"] * (log["trip_battery_health"]/100))
+                if log['departure_state_of_charge'] < prev_log["departure_state_of_charge"]:
+                    log['consumption'] = (prev_log["departure_state_of_charge"] - log["departure_state_of_charge"])/100 * (log["fuel_capacity"] * (log["trip_battery_health"]/100))
                     trip_consumption += log["consumption"]
-                prev_log['state_of_charge'] = log['state_of_charge']
+                prev_log['departure_state_of_charge'] = log['departure_state_of_charge']
                 log["leg_efficiency"] = 0
                 if log['consumption'] > 0:
                     log["leg_efficiency"] = log['leg_distance'] / log["consumption"]
@@ -177,13 +178,12 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 data['coords']["points"].append(
                     {"geometry":{"coordinates":[log["lng"],log["lat"]]},
                      "properties":{
-                        "trip_id":log['trip_id'],
                         "title":log['location_name'],
-                        "entry_type":log["entry_type"][:3].upper()
+                        "entry_type":log["entry_type"][:3].upper(),
+                        "photoCount": rec.photo_count,
                         }
                     }
                 )
-                # data['coords']["match_path"].append([log["lng"],log["lat"]])
                                         
 
         data['trip_consumption'] = trip_consumption

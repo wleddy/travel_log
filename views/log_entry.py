@@ -237,7 +237,8 @@ def log_waypoint(data=""):
             'lat' REAL,
             'lng' REAL,
             'odometer' INT,
-            'state_of_charge' INT,
+            'arrival_state_of_charge' INT,
+            'departure_state_of_charge' INT,
             'cost' REAL,
             'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
             """
@@ -370,7 +371,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     if not prev_odometer:
         prev_odometer = 0
     sql = f"""
-        select log_entry.state_of_charge as soc from trip
+        select log_entry.departure_state_of_charge as soc from trip
         join log_entry on log_entry.trip_id = trip.id
         where odometer is not null and trip.vehicle_id = (select vehicle_id from trip where trip.id = {get_current_trip_id()}) 
         order by log_entry.entry_UTC_date DESC
@@ -412,6 +413,9 @@ def get_edit_field_list(log_entry_rec) -> list | None:
                 <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Point of Interest</a>
             </div>
             <div class="w3-row w3-padding">
+                <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Charging Stop</a>
+            </div>
+            <div class="w3-row w3-padding">
                 <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Arrival</a>
             </div>
         </div>
@@ -446,8 +450,13 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     edit_fields.extend(
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
-        {'name':'state_of_charge','type':'number','label':'State of charge as % of Full','default':prev_soc,'class':'keypad_input',},
-        {"name":"end_of_log_fields_div",'code':True,'req':False,'content':"<div id='cost-container'>",},
+        {"name":"start_of_arrival_charge_fields_div",'code':True,'req':False,'content':"<div id='arrival-container' class='charge-stop'>",},
+        {'name':'arrival_state_of_charge','type':'number','label':'Arrival state of charge as % of Full','default':0,'class':'keypad_input',},
+        {"name":"end_of_arrival_charge_div",'code':True,'req':False,'content':"</div>",},
+        {"name":"start_of_departure_charge_fields_div",'code':True,'req':False,'content':"<div id='departure-container' class='charge-stop'>",},
+        {'name':'departure_state_of_charge','type':'number','label':'Departure state of charge as % of Full','default':0,'class':'keypad_input',},
+        {"name":"end_of_departure_charge_div",'code':True,'req':False,'content':"</div>",},
+        {"name":"start_of_cost_fields_div",'code':True,'req':False,'content':"<div id='cost-container' class='charge-stop' >",},
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
         {'name':'memo','type':'textarea',},

@@ -11,11 +11,12 @@
 <script>
     $(document).ready(function (){
         var coords = {{ data.coords | safe }};
-        globalCoords = [];
+        //  globalCoords = [];
         for (const point of coords.points){
-            globalCoords.push(point.geometry.coordinates)
+            tripCoords.push(point.geometry.coordinates)
         }
-        globalTripID = coords.points[0].properties.trip_id
+        //globalTripID = coords.points[0].properties.trip_id
+        globalTripID = {{ data["trip"].id }}
         map_bounds = get_map_bounds(coords);
         map_center = map_bounds.getCenter()
         create_trip_map(map_center);
@@ -76,13 +77,22 @@
             {% if rec.entry_type != "WAY" %}
                 <div  onclick="window.location='{{url_for("travel_log.edit_log")}}{{rec.id}}/?next={{ g.listURL }}'">
                     <div class="log_title_row w3-row w3-row-padding w3-secondary-color" >
-                        <h4 class="w3-col  m8 l8 s8" ><span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> {{rec.location_name}}</h4>
+                        <h4 class="w3-col  m8 l8 s8" >
+                            <span style="font-size:small;">({{ rec.entry_type | truncate(3,True,'',0) | upper }})</span> 
+                            {{rec.location_name}}
+                            {% if rec.photo_count > 0 %}
+                            <img style="height:20px;" src="{{ url_for('static', filename='travel_log/images/camera.png') }}" />
+                            {% endif %}
+                            {% if rec.entry_type | truncate(3,True,'',0) | upper == "CHA" %}
+                            <img style="height:25px;" src="{{ url_for('static', filename='travel_log/images/charger.png') }}" />
+                            {% endif %}
+                        </h4>
                         <p class="w3-col  m4 l4 s4 w3-right-align" >{{ rec.entry_date | short_abbr_date_string }}, {{ rec.entry_date | local_time_string}}</p>
                     </div>
                     <p class="w3-row-padding"><strong>Dist:</strong> {{ rec.leg_distance }}mi.</p>
                     <div class="w3-row w3-row-padding" >
                         <p class="w3-col m3 l3 s6"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
-                        <p class="w3-col m3 l3 s6"><strong>SOC:</strong> {{ rec.state_of_charge | default(0,True) }}%</p>
+                        <p class="w3-col m3 l3 s6"><strong>SOC:</strong> {{ rec.departure_state_of_charge | default(0,True) }}%</p>
                         <p class="w3-col m3 l3 s6"><strong>kWh:</strong> {{ rec.consumption | round(2) | default(0,True) }}</p>
                         <p class="w3-col m3 l3 s6"><strong>Cost:</strong> {{ rec.cost | default(0,True) | money('$') }}</p>
                     </div>
