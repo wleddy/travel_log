@@ -1,5 +1,4 @@
-
-mapboxgl.accessToken = 'pk.eyJ1IjoiYmxlZGR5IiwiYSI6ImNpanh3endiNzFlNm12Mm01YjUwcmt0dzEifQ.Fgy28_Hfzzl_WEvN_ur2xQ';
+/* Code shared between the home page and log entry edit page */
 
 function create_log_entry_map(map_div_id,location=undefined){
   // one of my favorite coffee shops...
@@ -112,18 +111,3 @@ function get_map_bounds(coords) {
 
     return bounds;
 }
-
-//function _setCurrentLoc(position){
-//    //use coordinates
-//    currentLat = position.coords.latitude;
-//    currentLng = position.coords.longitude;
-//    currentLocError = false
-//    $('#geoLng').html(currentLng);
-//    $('#geoLat').html(currentLat);
-//    setWayPoint();
-//}
-//
-//const geoWatchID = navigator.geolocation.watchPosition((position) => {
-//    _setCurrentLoc(position);
-//});
-
