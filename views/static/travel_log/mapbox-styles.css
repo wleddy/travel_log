@@ -33,6 +33,16 @@
     background-size: 35px;
 }
 
+.sat-marker {
+  background-color:white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.norm-marker{
+   background-color: none !important; 
+  cursor: pointer;
+}
+
 .mapboxgl-popup {
   max-width: 200px;
 }

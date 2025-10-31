@@ -16,7 +16,7 @@ function create_log_entry_map(map_div_id,location=undefined){
 
   let map = new mapboxgl.Map({
     container: map_div_id,
-    style: 'mapbox://styles/bleddy/ck7mere9w0g8k1inv74yyvgl6',
+    style: 'mapbox://styles/mapbox/standard',
     center: [lng, lat],
     zoom: 15
   });
@@ -31,6 +31,15 @@ function create_log_entry_map(map_div_id,location=undefined){
   return map;
 }
 
+function goSat(marker){
+    map.setStyle('mapbox://styles/mapbox/standard-satellite');
+    marker.addClassName('sat-marker');
+}
+function goNorm(){
+    map.setStyle('mapbox://styles/mapbox/standard');
+    marker.addClassName('norm-marker');
+
+}
 function add_marker(map,lng,lat,html=''){
   // create a HTML element for each marker
   const el = document.createElement('div');
