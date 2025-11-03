@@ -28,7 +28,8 @@ function create_log_entry_map(map_div_id,location=undefined){
     trackUserLocation: true,
     showUserHeading: true
 }));
-  return map;
+    map.addControl(new mapboxgl.ScaleControl({unit: 'imperial'}));
+    return map;
 }
 
 function goSat(marker){
@@ -75,6 +76,8 @@ function show_more(which) {
 function create_trip_map() {
     map = create_log_entry_map("map",map_center);
     map.dragRotate.disable();
+    // Add a scale control to the map
+    map.addControl(new mapboxgl.ScaleControl({unit: 'imperial'}));
     $('#map').show();
 }
 // coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}]}
