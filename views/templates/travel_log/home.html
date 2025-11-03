@@ -11,11 +11,9 @@
 <script>
     $(document).ready(function (){
         var coords = {{ data.coords | safe }};
-        //  globalCoords = [];
         for (const point of coords.points){
             tripCoords.push(point.geometry.coordinates)
         }
-        //globalTripID = coords.points[0].properties.trip_id
         {% if 'trip' in data %}
         globalTripID = {{ data["trip"].id }}
         {% endif %}
