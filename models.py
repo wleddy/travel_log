@@ -1,3 +1,4 @@
+from flask import session
 from shotglass2.takeabeltof.database import SqliteTable
 from shotglass2.takeabeltof.utils import cleanRecordID
 from shotglass2.takeabeltof.date_utils import local_datetime_now, getDatetimeFromString
@@ -124,7 +125,7 @@ class Trip(SqliteTable):
         self.order_by_col = 'lower(name)'
         self.defaults = {
                 'creation_date':local_datetime_now(),
-                'current_trip_date':datetime.utcnow(),
+                'current_trip_date':datetime.now(timezone.utc),
                 }
         
     def create_table(self):
@@ -147,7 +148,7 @@ class Trip(SqliteTable):
         """
     
         column_list = [
-        
+            {'name':'user_id','definition':'INTEGER',},
         ]
         
         return column_list
@@ -165,7 +166,13 @@ class Trip(SqliteTable):
         Returns:
             None
         """
-        rec.current_trip_date = datetime.utcnow()
+        rec.current_trip_date = datetime.now(timezone.utc)
+        if "user_id" in session:
+            if rec.user_id == None:
+                rec.user_id = session.get("user_id")
+        else:
+            raise ValueError("User ID not in session")
+        
         return super().save(rec, **kwargs)
     
 
