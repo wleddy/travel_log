@@ -351,7 +351,7 @@ def edit_current_trip():
 @mod.route('select_trip',methods=['GET','POST'])
 @mod.route('select_trip/',methods=['GET','POST'])
 @login_required
-def select_trip():
+def select_trip() ->str:
     """
     Select an existing trip to add or edit entries
 
@@ -360,7 +360,7 @@ def select_trip():
     trip.
 
     Returns:
-        flask response
+        A rendered page of text :str
     """
     setExits()
 
@@ -372,10 +372,12 @@ def select_trip():
         return redirect(g.listURL)
     
     data = {}
-    sql = """
+        
+    sql = f"""
         select id,name,
         coalesce ((select min(log_entry.entry_date) from log_entry where trip_id = trip.id),trip.creation_date) as entry_date 
         from trip
+        where trip.user_id == {session.get("user_id",-1)}
         order by entry_date 
     """
     data['recs'] = models.Trip(g.db).query(sql)
