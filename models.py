@@ -116,11 +116,11 @@ class LogEntry(SqliteTable):
         return super().update(rec, form, save)
     
     def save(self, rec, **kwargs):
-        # import pdb;pdb.set_trace()
+        import pdb;pdb.set_trace()
         if rec.id is None:
             pass #Brand new records without defaults set
         # if only one state of charge > 0, set them both the same
-        elif rec.entry_type.upper() == 'CHARGE STOP':
+        elif rec.entry_type.upper() == 'CHARGING STOP':
             pass #both values should have been entered by user
         elif float(rec.arrival_state_of_charge) > 0:
             rec.departure_state_of_charge = rec.arrival_state_of_charge
