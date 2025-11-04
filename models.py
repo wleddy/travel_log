@@ -19,6 +19,8 @@ class LogEntry(SqliteTable):
         self.defaults = {
             'entry_date':str(local_datetime_now()),
             'entry_UTC_date':str(datetime.now(timezone.utc)),
+            'arrival_state_of_charge':0,
+            'departure_state_of_charge':0,
         }
         
     def create_table(self):
@@ -113,6 +115,19 @@ class LogEntry(SqliteTable):
 
         return super().update(rec, form, save)
     
+    def save(self, rec, **kwargs):
+        # import pdb;pdb.set_trace()
+        # if only one state of charge > 0, set them both the same
+        if rec.entry_type.upper() == 'CHARGE STOP':
+            pass #both values should have been entered by user
+        elif float(rec.arrival_state_of_charge) > 0:
+            rec.departure_state_of_charge = rec.arrival_state_of_charge
+        elif float(rec.departure_state_of_charge) > 0:
+            rec.arrival_state_of_charge = rec.departure_state_of_charge
+
+
+        return super().save(rec, **kwargs)
+
 
 class Trip(SqliteTable):
     """Handle some basic interactions this table"""
@@ -171,8 +186,9 @@ class Trip(SqliteTable):
             if rec.user_id == None:
                 rec.user_id = session.get("user_id")
         else:
+            rec.user_id = -1
             raise ValueError("User ID not in session")
-        
+         
         return super().save(rec, **kwargs)
     
 
