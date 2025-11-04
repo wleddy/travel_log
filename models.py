@@ -116,7 +116,7 @@ class LogEntry(SqliteTable):
         return super().update(rec, form, save)
     
     def save(self, rec, **kwargs):
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         if rec.id is None:
             pass #Brand new records without defaults set
         # if only one state of charge > 0, set them both the same
