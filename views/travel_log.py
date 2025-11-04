@@ -111,7 +111,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             trip_summary["trip_fuel_consumed"] = 0
             if trip_summary['trip_distance'] > 0 and trip_summary['trip_fuel_consumed'] > 0 :
                 trip_summary['trip_fuel_consumed'] = trip_summary['trip_departure_fuel_level'] - trip_summary['trip_arrival_fuel_level']
-                trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity'])                    
+                trip_summary['trip_efficiency'] = trip_summary['trip_distance'] / (trip_summary['trip_fuel_consumed'] / 100  * trip_summary['fuel_capacity']) * (trip_summary["trip_battery_health"]/100)                    
 
             if trip_summary['fuel_type'] and trip_summary['fuel_type'].lower() == 'electric':
                 trip_summary['efficiency_factor'] = 'mi/kWh'
@@ -126,6 +126,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             CAST (coalesce(lng,0) AS REAL) as lng,
             CAST (coalesce(lat,0) AS REAL) as lat,
             CAST (coalesce(departure_state_of_charge,0) AS INTEGER) as departure_state_of_charge, 
+            CAST (coalesce(arrival_state_of_charge,0) AS INTEGER) as arrival_state_of_charge, 
             CAST (coalesce(cost,0) AS REAL) as cost, 
             vehicle.name as vehicle_name, 
             CAST (coalesce(vehicle.fuel_capacity,0) AS INTEGER) as fuel_capacity,
@@ -151,6 +152,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             # Start of trip values...
             prev_log['odometer'] = recs[0].odometer 
             prev_log['departure_state_of_charge'] = recs[0].departure_state_of_charge
+            prev_log['arrival_state_of_charge'] = recs[0].arrival_state_of_charge
             rec_num = 0
             for rec in recs:
                 if not rec.location_name:
@@ -159,10 +161,11 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = log['odometer'] - prev_log['odometer']
                 log['consumption'] = 0
-                if log['departure_state_of_charge'] < prev_log["departure_state_of_charge"]:
-                    log['consumption'] = (prev_log["departure_state_of_charge"] - log["departure_state_of_charge"])/100 * (log["fuel_capacity"] * (log["trip_battery_health"]/100))
+                if log['arrival_state_of_charge'] < prev_log["departure_state_of_charge"]:
+                    log['consumption'] = (prev_log["departure_state_of_charge"] - log["arrival_state_of_charge"])/100 * (log["fuel_capacity"] * (log["trip_battery_health"]/100))
                     trip_consumption += log["consumption"]
-                prev_log['departure_state_of_charge'] = log['departure_state_of_charge']
+                    prev_log['departure_state_of_charge'] = log['departure_state_of_charge']
+                prev_log['arrival_state_of_charge'] = log['arrival_state_of_charge']
                 log["leg_efficiency"] = 0
                 if log['consumption'] > 0:
                     log["leg_efficiency"] = log['leg_distance'] / log["consumption"]
@@ -173,8 +176,6 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
 
                 data['log_entries'].append(log)
 
-                # Create data to populate map
-                # coords = {'points':['geometry':{'coordinates':[-121.6, 38.8],},'properties':{'title':'Coffee Works'}],'match_path':[[-121.6, 38.8],[-121.6, 38.8]]}
                 data['coords']["points"].append(
                     {"geometry":{"coordinates":[log["lng"],log["lat"]]},
                      "properties":{
@@ -372,7 +373,7 @@ def select_trip() ->str:
         return redirect(g.listURL)
     
     data = {}
-        
+
     sql = f"""
         select id,name,
         coalesce ((select min(log_entry.entry_date) from log_entry where trip_id = trip.id),trip.creation_date) as entry_date 

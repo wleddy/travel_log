@@ -69,7 +69,7 @@
                     {% else %}
                     0
                     {% endif %}
-                <p class="w3-col m3 l3 s6"><strong>kWh:</strong> {{ data.trip_consumption | round(2) }}</p>
+                <p class="w3-col m3 l3 s6"><strong>Used:</strong> {{ data.trip_consumption | round(2) }}kWh</p>
                 <p class="w3-col m3 l3 s6"><strong>Cost:</strong> {{ data.log_entries[0].trip_fuel_cost | default(0,True) | money('$') }}</p>
             </div>
         <div id="home-trip-list" >
@@ -92,8 +92,16 @@
                     <p class="w3-row-padding"><strong>Dist:</strong> {{ rec.leg_distance }}mi.</p>
                     <div class="w3-row w3-row-padding" >
                         <p class="w3-col m3 l3 s6"><strong>Eff:</strong> {{ rec.leg_efficiency | round(2) }}{{ rec.efficiency_factor }}</p>
+                        {% if rec.arrival_state_of_charge > 0 %}
+                        <p class="w3-col m3 l3 s6"><strong>SOC:</strong> {{ rec.arrival_state_of_charge | default(0,True) }}%
+                        {% if rec.arrival_state_of_charge != rec.departure_state_of_charge %}
+                        &rarr; {{ rec.departure_state_of_charge | default(0,True) }}%
+                        {% endif %}
+                        </p>
+                        {% else %}
                         <p class="w3-col m3 l3 s6"><strong>SOC:</strong> {{ rec.departure_state_of_charge | default(0,True) }}%</p>
-                        <p class="w3-col m3 l3 s6"><strong>kWh:</strong> {{ rec.consumption | round(2) | default(0,True) }}</p>
+                        {% endif %}
+                        <p class="w3-col m3 l3 s6"><strong>Used:</strong> {{ rec.consumption | round(2) | default(0,True) }}kWh</p>
                         <p class="w3-col m3 l3 s6"><strong>Cost:</strong> {{ rec.cost | default(0,True) | money('$') }}</p>
                     </div>
                 </div>

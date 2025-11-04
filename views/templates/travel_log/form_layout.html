@@ -49,7 +49,7 @@
         if($('#entry_type').val() == 'Departure'){
             $('#departure-container').show();
         }
-        if($('#entry_type').val() == 'Arrival'){
+        if(($('#entry_type').val() == 'Arrival') || ($('#entry_type').val() == 'Point of Interest')){
             $('#arrival-container').show();
         }
     }
