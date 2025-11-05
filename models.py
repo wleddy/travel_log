@@ -19,8 +19,6 @@ class LogEntry(SqliteTable):
         self.defaults = {
             'entry_date':str(local_datetime_now()),
             'entry_UTC_date':str(datetime.now(timezone.utc)),
-            'arrival_state_of_charge':0,
-            'departure_state_of_charge':0,
         }
         
     def create_table(self):
@@ -35,8 +33,8 @@ class LogEntry(SqliteTable):
             'lat' REAL,
             'lng' REAL,
             'odometer' INT,
-            'arrival_state_of_charge' INT default 0,
-            'departure_state_of_charge' INT default 0,
+            'arrival_state_of_charge' INT,
+            'departure_state_of_charge' INT,
             'cost' REAL,
             'trip_id' INTEGER REFERENCES trip(id) ON DELETE CASCADE
             """

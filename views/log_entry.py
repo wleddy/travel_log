@@ -362,9 +362,11 @@ def get_edit_field_list(rec :dict,view :EditView) -> list | None:
     if not prev_odometer:
         prev_odometer = 0
     sql = f"""
-        select log_entry.departure_state_of_charge as soc from trip
+        select log_entry.departure_state_of_charge as soc 
+        from trip
         join log_entry on log_entry.trip_id = trip.id
-        where odometer is not null and trip.vehicle_id = (select vehicle_id from trip where trip.id = {get_current_trip_id()}) 
+        where odometer is not null and trip.vehicle_id = (select vehicle_id 
+                                                        from trip where trip.id = {get_current_trip_id()}) 
         order by log_entry.entry_UTC_date DESC
         limit 1
     """
@@ -445,10 +447,10 @@ def get_edit_field_list(rec :dict,view :EditView) -> list | None:
         [
         {'name':'odometer','label':'Odometer Reading','type':'number','default':prev_odometer,'class':'keypad_input',},
         {"name":"start_of_arrival_charge_fields_div",'code':True,'req':False,'content':"<div id='arrival-container' class='charge-stop'>",},
-        {'name':'arrival_state_of_charge','type':'number','label':'Arrival state of charge as % of Full','default':0,'class':'keypad_input',},
+        {'name':'arrival_state_of_charge','type':'number','label':'Arrival state of charge as % of Full','default':prev_soc,'class':'keypad_input',},
         {"name":"end_of_arrival_charge_div",'code':True,'req':False,'content':"</div>",},
         {"name":"start_of_departure_charge_fields_div",'code':True,'req':False,'content':"<div id='departure-container' class='charge-stop'>",},
-        {'name':'departure_state_of_charge','type':'number','label':'Departure state of charge as % of Full','default':0,'class':'keypad_input',},
+        {'name':'departure_state_of_charge','type':'number','label':'Departure state of charge as % of Full','default':prev_soc,'class':'keypad_input',},
         {"name":"end_of_departure_charge_div",'code':True,'req':False,'content':"</div>",},
         {"name":"start_of_cost_fields_div",'code':True,'req':False,'content':"<div id='cost-container' class='charge-stop' >",},
         {'name':'cost','type':'text','default':'0','class':'keypad_input',},
