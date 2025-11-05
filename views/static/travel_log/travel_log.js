@@ -17,4 +17,9 @@ function show_big_photo(source){
     biggy.toggle();
     $("#large_photo_contain").toggle();
     $(".photo_contain").toggle();
+
+    // Center the image
+    let proportion = source.width / source.height;
+    let margin = ($("#large_photo_contain").width() - ($("#large_photo_contain").height() * proportion)) /2;
+    $("#large_photo_contain").css('margin-left',margin);
 }

@@ -24,28 +24,25 @@ img.log_photo_small {
     position:relative;
 
 }
-#large_photo_contain {
+#large_photo_contain, #log_photo_large {
     position: relative;
     height:400px;
+    max-width: 100%;
     display:none;
-}
-@media (max-width:601px){
-    #large_photo_contain {
-        height:200px;
-    }
-}
-
-#log_edit_photo {
-    display:block;
-    width:100%;
 }
 
 #log_photo_large {
     position:absolute;
     top:0;
-    left:0;
-    width:100%;
+    margin:0 auto;
+    /* left:0; */
+    /* max-width:100%;
+    max-height: 400px; */
     display:none;
+}
+#log_edit_photo {
+    display:block;
+    width:100%;
 }
 
 #log_photo_large_title {
@@ -63,4 +60,10 @@ div#log_photo_large_title h3, div#log_photo_large_title p {
 div#log_photo_large_title h3 {
     size:3em;
     font-weight: bold;
+}
+
+@media (max-width: 375px) {
+    #large_photo_contain, #log_photo_large {
+        height:200px;
+    }
 }
