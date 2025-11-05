@@ -90,7 +90,7 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
                 CAST (coalesce(max(odometer),0) AS INTEGER) as trip_ending,
                 CAST (sum(coalesce(departure_state_of_charge,0)) AS INTEGER) as trip_arrival_fuel_level,
                 CAST (sum(coalesce(departure_state_of_charge,0)) AS INTEGER) -
-                    (SELECT CAST(coalesce(departure_state_of_charge,0) AS INTEGER) from log_entry 
+                    (SELECT CAST(coalesce(arrival_state_of_charge,0) AS INTEGER) from log_entry 
                     where trip_id = {trip_id} order by entry_date DESC limit 1) 
                     as trip_departure_fuel_level,
                 CAST (sum(coalesce(cost,0)) AS REAL) as trip_fuel_cost,
