@@ -206,6 +206,12 @@ def home():
 
         # select the most "current" trip record
         trip_id = get_current_trip_id()
+
+        # delete any log_entries for this trip without a location_name
+        # these recs are left over is user starts a log entry but leaves page unexpectedly
+        if trip_id:
+            models.Trip(g.db).query(f"delete from log_entry where location_name is null and trip_id = {trip_id}")
+
         data['trip'] = models.Trip(g.db).get(trip_id)
         # get logs of the most recent trips if any
         if data['trip']:
