@@ -104,6 +104,8 @@ def edit_log(rec_id=None,**kwargs):
             rec.entry_date = local_datetime_now()
  
     view = EditView(PRIMARY_TABLE,g.db,rec_id)
+    if not view.next:
+        view.next = kwargs.get("next",'')
 
     if is_mobile_device():
         view.use_anytime_date_picker = False
@@ -112,7 +114,7 @@ def edit_log(rec_id=None,**kwargs):
     if not view.rec.trip_id:
         view.rec.trip_id = get_current_trip_id()
 
-    view.edit_fields = get_edit_field_list(rec)
+    view.edit_fields = get_edit_field_list(rec,view)
     if view.edit_fields is None:
         return redirect(next)
 
@@ -129,8 +131,6 @@ def edit_log(rec_id=None,**kwargs):
     view.validate_form = validate_form 
 
     view.use_anytime_date_picker = not is_mobile_device()
-    if not view.next:
-        view.next = kwargs.get("next",'')
 
      # Process the form?
     if request.form and view.success:
@@ -289,7 +289,7 @@ def log_waypoint(data=""):
     return "OK"
     
     
-def create_menus():
+def create_menus() ->None:
     """
     Create menu items for this module
 
@@ -300,15 +300,6 @@ def create_menus():
 
     """
 
-    # # Static dropdown menu...
-    # g.menu_items.append({'title':'Drop down header','drop_down_menu':{
-    #         'name':'First','url':url_for('.something'),
-    #         'name':'Second','url':url_for('.another'),
-    #         }
-    #     })
-    # # single line menu
-    # g.menu_items.append({'title':'Something','url':url_for('.something')})
-    
     # This makes a drop down menu for this application
     g.admin.register(models.TripSegment,url_for('trip_segment.display'),display_name='Trip Logging',header_row=True,minimum_rank_required=500,roles=['admin',])
     g.admin.register(models.TripSegment,
@@ -343,12 +334,12 @@ def initialize_tables(db) -> None:
     models.init_db(db)
 
 
-def get_edit_field_list(log_entry_rec) -> list | None:
+def get_edit_field_list(rec :dict,view :EditView) -> list | None:
     """
     Returns a list of edit field dicts for use with ViewEdit
 
     Arguments:
-        log_entry_rec -- The log_entry record we are about to edit
+        rec -- The log_entry record we are about to edit
     Returns:
         list or None on error
     """ 
@@ -419,7 +410,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
                 <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Arrival</a>
             </div>
             <div class="w3-row w3-padding">
-                <a href="{g.deleteURL}/{log_entry_rec.id}?next=/travel_log/" class="w3-col w3-button w3-padding w3-gray choose-type" >Cancel</a>
+                <a href="{g.deleteURL}/{rec.id}?next={view.next}" class="w3-col w3-button w3-padding w3-gray choose-type" >Cancel</a>
             </div>
         </div>
         """,
@@ -443,7 +434,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
 
     entry_dict['content'] = f"""
     <p>
-        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(log_entry_rec.entry_date,'iso_datetime')[:-3]}" />
+        <input name="entry_date" class="w3-input" type="{field_type}" id="entry_date" value="{date_to_string(rec.entry_date,'iso_datetime')[:-3]}" />
     </p>
     """
     
@@ -464,7 +455,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
         {"name":"end_of_cost_div",'code':True,'req':False,'content':"</div>",},
         {'name':'memo','type':'textarea',},
         ])
-    if log_entry_rec.photo_list:
+    if rec.photo_list:
         # import pdb;pdb.set_trace()
         edit_fields.extend([{'name':'log_image_label',"type":"label_only","label":"Photos",}]),
         entry_dict = {'name':"photo_list","code":True,"label":None,'content':''}
