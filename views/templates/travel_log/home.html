@@ -47,8 +47,8 @@
         </div>
         <div id="trip-list-contain" >
             <h3 id="trip_name" class="w3-primary-color"  
-                title="Click to edit Trip" onclick="window.location='{{url_for("travel_log.edit_trip")}}
-                {{data.trip.id}}/?next={{ g.listURL }}'">
+                title="Click to edit Trip" 
+                onclick="window.location='{{url_for("travel_log.edit_trip")}}{{data.trip.id}}/?next={{ g.listURL }}'">
                 {{data.trip.name}}
                 {% if data.log_entries %}
                     <span class="w3-hide-small">&nbsp;&nbsp;&mdash;&nbsp;&nbsp;{{data.log_entries[0].entry_date | abbr_date_string }}</span>
