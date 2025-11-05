@@ -403,7 +403,7 @@ def get_edit_field_list(log_entry_rec) -> list | None:
     edit_fields.extend(
         [
         {"name":"choose_type","type":"text","label":"",'code':True,'req':False,
-         'content': """
+         'content': f"""
         <div id="choose_type" class="w3-col w3-border w3-center w3-primary-color" >
             <h2 class="w3-center">Select Entry Type</h2>
             <div class="w3-row w3-padding">
@@ -417,6 +417,9 @@ def get_edit_field_list(log_entry_rec) -> list | None:
             </div>
             <div class="w3-row w3-padding">
                 <a href="#" class="w3-col w3-button w3-padding w3-secondary-color choose-type" >Arrival</a>
+            </div>
+            <div class="w3-row w3-padding">
+                <a href="{g.deleteURL}/{log_entry_rec.id}?next=/travel_log/" class="w3-col w3-button w3-padding w3-gray choose-type" >Cancel</a>
             </div>
         </div>
         """,
