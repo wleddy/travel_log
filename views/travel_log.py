@@ -153,15 +153,14 @@ def compile_trip_summary(data:dict,trip_ids:int | list,summary=False) ->None:
             prev_log['odometer'] = recs[0].odometer 
             prev_log['departure_state_of_charge'] = recs[0].departure_state_of_charge
             prev_log['arrival_state_of_charge'] = recs[0].arrival_state_of_charge
-            rec_num = 0
-            for rec in recs:
+            for index, rec in enumerate(recs):
                 if not rec.location_name:
                     continue
-                rec_num += 1
                 log = rec.asdict() # as dict so we can add elements
                 log['leg_distance'] = log['odometer'] - prev_log['odometer']
                 log['consumption'] = 0
-                if log['arrival_state_of_charge'] < prev_log["departure_state_of_charge"]:
+                if log['arrival_state_of_charge'] < prev_log["departure_state_of_charge"] \
+                    and index is not 0:
                     log['consumption'] = (prev_log["departure_state_of_charge"] - log["arrival_state_of_charge"])/100 * (log["fuel_capacity"] * (log["trip_battery_health"]/100))
                     trip_consumption += log["consumption"]
                     prev_log['departure_state_of_charge'] = log['departure_state_of_charge']
