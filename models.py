@@ -120,10 +120,11 @@ class LogEntry(SqliteTable):
         # if only one state of charge > 0, set them both the same
         elif rec.entry_type.upper() == 'CHARGING STOP':
             pass #both values should have been entered by user
+        elif rec.entry_type.upper() == 'DEPARTURE' and float(rec.departure_state_of_charge) > 0:
+            rec.arrival_state_of_charge = rec.departure_state_of_charge
         elif float(rec.arrival_state_of_charge) > 0:
             rec.departure_state_of_charge = rec.arrival_state_of_charge
-        elif float(rec.departure_state_of_charge) > 0:
-            rec.arrival_state_of_charge = rec.departure_state_of_charge
+        
 
 
         return super().save(rec, **kwargs)
