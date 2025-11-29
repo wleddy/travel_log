@@ -5,6 +5,7 @@ from shotglass2.takeabeltof.date_utils import local_datetime_now, getDatetimeFro
 from shotglass2.takeabeltof.file_upload import FileUpload
 from datetime import datetime, timezone
 import pytz
+from timezonefinder import timezone_at
 
 
 class LogEntry(SqliteTable):
@@ -16,10 +17,10 @@ class LogEntry(SqliteTable):
         super().__init__(db_connection)
         self.table_name = self.TABLE_IDENTITY
         self.order_by_col = 'entry_date'
-        self.defaults = {
-            'entry_date':str(local_datetime_now()),
-            'entry_UTC_date':str(datetime.now(timezone.utc)),
-        }
+        self.defaults = {}
+        #     'entry_date':str(local_datetime_now()),
+        #     'entry_UTC_date':str(datetime.now(timezone.utc)),
+        # }
         
     def create_table(self):
         """Define and create a table"""
@@ -46,7 +47,9 @@ class LogEntry(SqliteTable):
         """A list of dicts used to add fields to an existing table.
         """
     
-        column_list = []
+        column_list = [
+            {'name':'time_zone','definition':'TEXT',}
+        ]
         
         # column_list = [
         #     {'name':'arrival_state_of_charge','definition':'REAL',}
@@ -70,15 +73,20 @@ class LogEntry(SqliteTable):
 
         return rec
         
-    def new(self,set_defaults=True):
+    def new(self,set_defaults=True,**kwargs):
         """return an 'empty' DataRow object for the table.
         In this case we need to add extra field to hold extra photo data
+
+        Now also accepts at latlng string in the form '34.3242,-120.34433' in order
+        to set the date and time in accordance with that location
         """
+        # import pdb;pdb.set_trace()
         rec = self.get_column_names()
         rec.extend(['photo_list','log_photo_id'])
         rec = self._get_data_row(column_names=rec)
         if set_defaults:
             self.set_defaults(rec)
+
         return rec
     
     def update(self, rec, form, save=False) -> None:
@@ -101,20 +109,20 @@ class LogEntry(SqliteTable):
             None
         """
         # import pdb;pdb.set_trace()
-        old = self.get(rec.id)
-        if old:
-            form_entry_date = getDatetimeFromString(form.get('entry_date'))
-            # Did the entry_date change?
-            if form_entry_date != getDatetimeFromString(old.entry_date):
-                # set entry_UTC_date to the UTC equivelent for the entry_date
-                rec.entry_UTC_date = form_entry_date.astimezone(pytz.utc)
-        else:
-            rec.entry_UTC_date = datetime.now(timezone.utc) 
+        super().update(rec, form)
+                       
+        if rec.lat and rec.lng:
+            lat = float(rec.lat)
+            lng = float(rec.lng)
+            rec.time_zone = timezone_at(lng=lng, lat=lat)
+            form_entry_date = getDatetimeFromString(form.get('entry_date'),rec.time_zone)
+            rec.entry_date = form_entry_date.astimezone(pytz.timezone(rec.time_zone))
+            rec.entry_UTC_date = form_entry_date.astimezone(pytz.utc)
 
-        return super().update(rec, form, save)
+        return
+        
     
     def save(self, rec, **kwargs):
-        # import pdb;pdb.set_trace()
         if rec.id is None:
             pass #Brand new records without defaults set
         # if only one state of charge > 0, set them both the same
@@ -124,8 +132,6 @@ class LogEntry(SqliteTable):
             rec.arrival_state_of_charge = rec.departure_state_of_charge
         elif float(rec.arrival_state_of_charge) > 0:
             rec.departure_state_of_charge = rec.arrival_state_of_charge
-        
-
 
         return super().save(rec, **kwargs)
 
